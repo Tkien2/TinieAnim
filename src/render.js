@@ -1,3 +1,4 @@
+//TODO: refactor play and loop func
 export function createScreen(parent, width, height, scale = 1){
     const canvas = document.createElement("canvas")
     canvas.height = height
@@ -12,6 +13,7 @@ export function createScreen(parent, width, height, scale = 1){
     }
 }
 export class Render {
+    #lastTimestamp = 0
     #isPlaying = false
     #entities = []
     #isRendered = false
@@ -57,10 +59,13 @@ export class Render {
         }
         this.#isRendered = true
     }
-    play(){
+    play(timestamp){
+        timestamp = timestamp ?? 0
+        const dt = (timestamp - this.#lastTimestamp)/1000
+        this.#lastTimestamp = timestamp
         if(this.#isRendered){
             this.#isPlaying = true
-            this.#loop()
+            this.#loop(dt)
             this.render()
         } else{
             console.error("You must render first")
@@ -73,12 +78,12 @@ export class Render {
             console.error("You must render first")
         }
     }
-    #loop(){
+    #loop(dt){
         if(this.#isPlaying){
             for(let func of this.#updateFunctions){
                 if(func.isEnabled){
                     try{
-                        func()
+                        func(dt)
                     } catch(e){
                         console.error("There is something wrong with updateFunction.\n", e)
                     }

@@ -10,6 +10,9 @@ class Entity {
         this.name = name
         this.id = -1
     }
+    moveTo(position, duration){
+        
+    }
     draw(){
         console.error("This Entity does not have draw function")
     }

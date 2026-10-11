@@ -6,13 +6,14 @@ const renderer = new render.Render(canvas.element)
 const rect = new shapes.Rectangle({
     x: 100, y: 200, color: constants.COLORS.Red
 })
-let rectUpdater = ()=>{
-    rect.x += 2
-    rect.y += 2
+let speed = 2
+let rectUpdater = (dt)=>{
+    rect.x += speed*dt
+    rect.y += -speed*dt
 }
 renderer.addEntities(rect)
 renderer.render()
 renderer.play()
 renderer.addUpdater(rectUpdater)
-await renderer.wait(500)
+await renderer.wait(1000)
 renderer.disableUpdater(rectUpdater)
