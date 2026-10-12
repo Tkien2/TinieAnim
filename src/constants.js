@@ -7,4 +7,5 @@ export const COLORS = {
     Green: "#38FF3B",
     Blue: "#385DFF",
     Purple: "#9B38FF",
+    Void: "#141516",
 }

@@ -1,4 +1,5 @@
 import * as constants from "./constants.js"
+import { Coordinates2 } from "./math.js"
 class Entity {
     constructor({
         x = 0,
@@ -10,8 +11,8 @@ class Entity {
         this.name = name
         this.id = -1
     }
-    moveTo(position, duration){
-        
+    getCoordinates2(){
+        return new Coordinates2(this.x, this.y)
     }
     draw(){
         console.error("This Entity does not have draw function")

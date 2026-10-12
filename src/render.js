@@ -1,5 +1,5 @@
-//TODO: refactor play and loop func
-export function createScreen(parent, width, height, scale = 1){
+import { Vector2, Coordinates2 } from "./math.js"
+export function createScreen(width, height, parent = null, scale = 1){
     const canvas = document.createElement("canvas")
     canvas.height = height
     canvas.width = width
@@ -19,6 +19,7 @@ export class Render {
     #isRendered = false
     #backgroundColor = "white"
     #updateFunctions = []
+    #dt = 0
     constructor(canvas){
         this.ctx = canvas.getContext("2d")
         this.canvas = canvas
@@ -59,17 +60,14 @@ export class Render {
         }
         this.#isRendered = true
     }
-    play(timestamp){
-        timestamp = timestamp ?? 0
-        const dt = (timestamp - this.#lastTimestamp)/1000
-        this.#lastTimestamp = timestamp
+    play(){
+        this.#isPlaying = true
         if(this.#isRendered){
-            this.#isPlaying = true
-            this.#loop(dt)
-            this.render()
+            requestAnimationFrame(this.#loop.bind(this))
         } else{
             console.error("You must render first")
         }
+        this.#lastTimestamp = null
     }
     pause(){
         if(this.#isRendered){
@@ -78,18 +76,24 @@ export class Render {
             console.error("You must render first")
         }
     }
-    #loop(dt){
+    #loop(timestamp){
+        timestamp = timestamp ?? 0
+        this.#dt = this.#lastTimestamp === null ? 0 : (timestamp - this.#lastTimestamp)/1000
+        // console.log(timestamp);
+        
+        this.#lastTimestamp = timestamp
         if(this.#isPlaying){
             for(let func of this.#updateFunctions){
                 if(func.isEnabled){
                     try{
-                        func(dt)
+                        func(this.#dt)
                     } catch(e){
                         console.error("There is something wrong with updateFunction.\n", e)
                     }
                 }
             }
-            requestAnimationFrame(this.play.bind(this))
+            this.render()
+            requestAnimationFrame(this.#loop.bind(this))
         }
     }
     clear(){
@@ -139,5 +143,12 @@ export class Render {
         return new Promise((resolve)=>{
             setTimeout(resolve, ms)
         })
+    }
+    // đm sợ sét đánh cúp cmn điện nên push trước
+    moveTo(entity, coords2, duration = 1){
+        let elapsed = 0
+        const updater = (dt)=>{
+            elapsed += dt
+        }
     }
 }
