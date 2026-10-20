@@ -1,4 +1,5 @@
 import { Vector2, Coordinates2 } from "./math.js"
+import { animation, timingFunction } from "./animation.js"
 export function createScreen(width, height, parent = null, scale = 1){
     const canvas = document.createElement("canvas")
     canvas.height = height
@@ -144,11 +145,24 @@ export class Render {
             setTimeout(resolve, ms)
         })
     }
-    // đm sợ sét đánh cúp cmn điện nên push trước
-    moveTo(entity, coords2, duration = 1){
-        let elapsed = 0
-        const updater = (dt)=>{
-            elapsed += dt
+    // TODO: fix bug khi di chuyển 1 đối tượng nhiều lần cùng lúc
+    moveTo(entity, coords2, duration = 1, timingFunc = animation.LINEAR){
+        if(duration>0 && typeof(duration) === 'number'){
+            const startCoords = entity.getCoordinates2()
+            const shiftVector = coords2.subtract(startCoords)
+            let elapsed = 0
+            const updater = (dt)=>{
+                elapsed += dt
+                let progress = Math.min(elapsed/duration, 1)
+                let easedProgress = timingFunction(progress, timingFunc)
+                entity.setCoordinates2(startCoords.shift(shiftVector.multiply(easedProgress)))
+                if(progress>=1){
+                    this.removeUpdater(updater)
+                }
+            }
+            this.addUpdater(updater)
+        } else{
+            console.error("Duration must be a number and greater than 0")
         }
     }
 }

@@ -14,6 +14,14 @@ class Entity {
     getCoordinates2(){
         return new Coordinates2(this.x, this.y)
     }
+    setCoordinates2(coords2){
+        this.x = coords2.x
+        this.y = coords2.y
+    }
+    shift(vector2){
+        this.x += vector2.x
+        this.y += vector2.y
+    }
     draw(){
         console.error("This Entity does not have draw function")
     }
