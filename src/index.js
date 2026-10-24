@@ -8,20 +8,20 @@ const renderer = new render.Render(canvas.element)
 const rect = new shapes.Rectangle({
     x: 100, y: 200, color: constants.COLORS.Red
 })
+const circ = new shapes.Circle({x: 200, y: 100})
 let speed = 90
 let rectUpdater = (dt)=>{
     rect.x += speed*dt
     rect.y += speed*dt
 }
 renderer.setBackgroundColor(constants.COLORS.Void)
-renderer.addEntities(rect)
+renderer.addEntities(rect, circ)
 renderer.render()
 renderer.play()
+renderer.moveTo(circ, new Coordinates2(30,170), 2, animation.EASE_IN_OUT)
 renderer.addUpdater(rectUpdater)
 await renderer.wait(1000)
 renderer.removeUpdater(rectUpdater)
 rect.color = constants.COLORS.Yellow
 renderer.moveTo(rect, new Coordinates2(100,100), 1, animation.EASE_IN_OUT)
-await renderer.wait(1000)
-rect.color = constants.COLORS.Green
-renderer.moveTo(rect, new Coordinates2(300,200), 1, animation.EASE_IN_OUT)
+// renderer.pause()

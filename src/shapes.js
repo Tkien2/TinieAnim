@@ -52,7 +52,7 @@ class Shape extends Entity{
         strokeColor = null,
     } = {}){
         super({x,y,name})
-        this.color = color,
+        this.color = color
         this.strokeColor = strokeColor
     }
 }
@@ -74,5 +74,43 @@ export class Rectangle extends Shape{
             this.y - this.height/2,
             this.width, this.height
         )
+    }
+}
+export class Arc extends Shape{
+    constructor({
+        name = "TinieEntity",
+        x = 0, y = 0, radius = 50,
+        startAngle = 0, endAngle = Math.PI/2,
+        color = null,
+        strokeColor = constants.COLORS.Blue,
+    } = {}){
+        super({x,y,color,strokeColor,name})
+        this.radius = radius
+        this.startAngle = startAngle
+        this.endAngle = endAngle
+    }
+    draw(ctx){
+        ctx.beginPath()
+        ctx.arc(this.x, this.y, this.radius, this.startAngle, this.endAngle)
+        if(this.color !== null){
+            ctx.fillStyle = this.color
+            ctx.fill()
+        }
+        if(this.strokeColor !== null){
+            ctx.strokeStyle = this.strokeColor
+            ctx.stroke()
+        }
+    }
+}
+export class Circle extends Arc{
+    constructor({
+        name = "TinieEntity",
+        x = 0, y = 0, radius = 25,
+        color = constants.COLORS.Blue,
+        strokeColor = null,
+    } = {}){
+        super({x,y,color,strokeColor,name, radius})
+        this.startAngle = 0
+        this.endAngle = Math.PI*2
     }
 }

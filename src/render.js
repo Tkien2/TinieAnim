@@ -157,6 +157,7 @@ export class Render {
                 let easedProgress = timingFunction(progress, timingFunc)
                 entity.setCoordinates2(startCoords.shift(shiftVector.multiply(easedProgress)))
                 if(progress>=1){
+                    entity.setCoordinates2(coords2)
                     this.removeUpdater(updater)
                 }
             }
