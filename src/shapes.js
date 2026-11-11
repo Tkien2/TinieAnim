@@ -1,15 +1,12 @@
 import * as constants from "./constants.js"
 import { Coordinates2 } from "./math.js"
 class Entity {
-    constructor({
-        x = 0,
-        y = 0,
-        name = "TinieEntity",
-    } = {}){
-        this.x = x
-        this.y = y
-        this.name = name
+    constructor(properties = {}){
+        this.x = properties.x ?? 0
+        this.y = properties.y ?? 0
+        this.name = properties.name ?? "TinieEntity"
         this.id = -1
+        this.scale = 1
     }
     getCoordinates2(){
         return new Coordinates2(this.x, this.y)
@@ -46,71 +43,71 @@ class Entity {
     }
 }
 class Shape extends Entity{
-    constructor({
-        x = 0, y = 0, name = "TinieEntity",
-        color = constants.COLORS.Blue,
-        strokeColor = null,
-    } = {}){
-        super({x,y,name})
-        this.color = color
-        this.strokeColor = strokeColor
+    constructor(properties = {}){
+        super(properties)
+        this.color = properties.color ?? constants.COLORS.Blue
+        this.strokeColor = properties.strokeColor ?? null
     }
 }
 export class Rectangle extends Shape{
-    constructor({
-        name = "TinieEntity",
-        x = 0, y = 0, width = 50, height = 50,
-        color = constants.COLORS.Blue,
-        strokeColor = null,
-    } = {}){
-        super({x,y,color,strokeColor,name})
+    constructor(properties = {}){
+        super(properties)
+        this.width = properties.width ?? 50
+        this.height = properties.height ?? 50
+    }
+    resize(width, height){
         this.width = width
         this.height = height
     }
     draw(ctx){
-        ctx.fillStyle = this.color
-        ctx.fillRect(
-            this.x - this.width/2,
-            this.y - this.height/2,
-            this.width, this.height
-        )
+        try{
+            ctx.fillStyle = this.color
+            const wh = [this.width*this.scale, this.height*this.scale]
+            ctx.fillRect(
+                this.x - wh[0]/2,
+                this.y - wh[1]/2,
+                wh[0], wh[1]
+            )
+        }catch(e){
+            console.error("Can not draw this Entity")
+        }
     }
 }
 export class Arc extends Shape{
-    constructor({
-        name = "TinieEntity",
-        x = 0, y = 0, radius = 50,
-        startAngle = 0, endAngle = Math.PI/2,
-        color = null,
-        strokeColor = constants.COLORS.Blue,
-    } = {}){
-        super({x,y,color,strokeColor,name})
+    constructor(properties = {}){
+        super(properties)
+        this.radius = properties.radius ?? 25
+        this.startAngle = properties.startAngle ?? 0
+        this.endAngle = properties.endAngle ?? Math.PI/2
+        this.strokeColor = properties.strokeColor ?? constants.COLORS.Blue
+        this.color = properties.color ?? null
+    }
+    resize(radius){
         this.radius = radius
-        this.startAngle = startAngle
-        this.endAngle = endAngle
     }
     draw(ctx){
-        ctx.beginPath()
-        ctx.arc(this.x, this.y, this.radius, this.startAngle, this.endAngle)
-        if(this.color !== null){
-            ctx.fillStyle = this.color
-            ctx.fill()
-        }
-        if(this.strokeColor !== null){
-            ctx.strokeStyle = this.strokeColor
-            ctx.stroke()
+        try{
+            ctx.beginPath()
+            ctx.arc(this.x, this.y, this.radius*this.scale, this.startAngle, this.endAngle)
+            if(this.color !== null){
+                ctx.fillStyle = this.color
+                ctx.fill()
+            }
+            if(this.strokeColor !== null){
+                ctx.strokeStyle = this.strokeColor
+                ctx.stroke()
+            }
+        }catch(e){
+            console.error("Can not draw this Entity");
         }
     }
 }
 export class Circle extends Arc{
-    constructor({
-        name = "TinieEntity",
-        x = 0, y = 0, radius = 25,
-        color = constants.COLORS.Blue,
-        strokeColor = null,
-    } = {}){
-        super({x,y,color,strokeColor,name, radius})
+    constructor(properties = {}){
+        super(properties)
         this.startAngle = 0
         this.endAngle = Math.PI*2
+        this.color = properties.color ?? constants.COLORS.Blue
+        this.strokeColor = properties.strokeColor ?? null
     }
 }

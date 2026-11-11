@@ -24,4 +24,7 @@ await renderer.wait(1000)
 renderer.removeUpdater(rectUpdater)
 rect.color = constants.COLORS.Yellow
 renderer.moveTo(rect, new Coordinates2(100,100), 1, animation.EASE_IN_OUT)
+renderer.setScale(rect, 2, 1)
+await renderer.wait(1000)
+renderer.setScale(rect, 0.5, 1)
 // renderer.pause()

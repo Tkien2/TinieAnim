@@ -27,7 +27,7 @@ export class Render {
         this.currentId = 0
     }
     getEntities(){
-        return this.#entities
+        return [...this.#entities]
     }
     addEntities(...entities){
         for(let e of entities){
@@ -62,8 +62,8 @@ export class Render {
         this.#isRendered = true
     }
     play(){
-        this.#isPlaying = true
         if(this.#isRendered){
+            this.#isPlaying = true
             requestAnimationFrame(this.#loop.bind(this))
         } else{
             console.error("You must render first")
@@ -80,8 +80,6 @@ export class Render {
     #loop(timestamp){
         timestamp = timestamp ?? 0
         this.#dt = this.#lastTimestamp === null ? 0 : (timestamp - this.#lastTimestamp)/1000
-        // console.log(timestamp);
-        
         this.#lastTimestamp = timestamp
         if(this.#isPlaying){
             for(let func of this.#updateFunctions){
@@ -145,9 +143,8 @@ export class Render {
             setTimeout(resolve, ms)
         })
     }
-    // TODO: fix bug khi di chuyển 1 đối tượng nhiều lần cùng lúc
     moveTo(entity, coords2, duration = 1, timingFunc = animation.LINEAR){
-        if(duration>0 && typeof(duration) === 'number'){
+        if(duration>0 && typeof(duration) === 'number' && duration !== Infinity){
             const startCoords = entity.getCoordinates2()
             const shiftVector = coords2.subtract(startCoords)
             let elapsed = 0
@@ -163,7 +160,27 @@ export class Render {
             }
             this.addUpdater(updater)
         } else{
-            console.error("Duration must be a number and greater than 0")
+            console.error("Duration must be a finite number and greater than 0")
+        }
+    }
+    setScale(entity, scale, duration = 1, timingFunc = animation.LINEAR){
+        if(duration>0 && typeof(duration) === 'number' && duration !== Infinity){
+            const startScale = entity.scale
+            const deltaScale = scale - entity.scale
+            let elapsed = 0
+            const updater = (dt)=>{
+                elapsed += dt
+                let progress = Math.min(elapsed/duration, 1)
+                let easedProgress = timingFunction(progress, timingFunc)
+                entity.scale = startScale + deltaScale*easedProgress
+                if(progress>=1){
+                    entity.scale = scale
+                    this.removeUpdater(updater)
+                }
+            }
+            this.addUpdater(updater)
+        } else{
+            console.error("Duration must be a finite number and greater than 0")
         }
     }
 }

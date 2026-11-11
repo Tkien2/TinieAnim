@@ -53,7 +53,7 @@ export function BinarySearch(target, func, min=0, max=1, decimalPoint = 3){
     let value = null
     const factor = 10**decimalPoint
     target = Math.round(target*factor)/factor
-    for(let k = 0; k<=20; k++){
+    for(let k = 0; k<=30; k++){
         value = func(i)
         if(value > target){
             r = i
