@@ -42,10 +42,11 @@ export function CubicBezierCurve(t, isX = true, controlPoints = [[0.5,0],[0.5,1]
             return 3*Math.pow(1-t,2)*t*controlPoints[0][1] + 3*(1-t)*t*t*controlPoints[1][1] + t*t*t
         }
     } else{
-        // skill issue actually
+        // giới hạn chỉ cho phép hàm Bezier không có cực trị
         console.error("The x-coordinate of the control point must be within the interval (0, 1)")
     }
 }
+//đơn điệu + đồng biến
 export function BinarySearch(target, func, min=0, max=1, decimalPoint = 3){
     let l = min
     let r = max

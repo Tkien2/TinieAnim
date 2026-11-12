@@ -1,4 +1,3 @@
-import { Vector2, Coordinates2 } from "./math.js"
 import { animation, timingFunction } from "./animation.js"
 export function createScreen(width, height, parent = null, scale = 1){
     const canvas = document.createElement("canvas")
@@ -143,18 +142,15 @@ export class Render {
             setTimeout(resolve, ms)
         })
     }
-    moveTo(entity, coords2, duration = 1, timingFunc = animation.LINEAR){
+    #changeProperties(entity, calcFunc, duration = 1, timingFunc = animation.LINEAR){
         if(duration>0 && typeof(duration) === 'number' && duration !== Infinity){
-            const startCoords = entity.getCoordinates2()
-            const shiftVector = coords2.subtract(startCoords)
             let elapsed = 0
             const updater = (dt)=>{
                 elapsed += dt
                 let progress = Math.min(elapsed/duration, 1)
                 let easedProgress = timingFunction(progress, timingFunc)
-                entity.setCoordinates2(startCoords.shift(shiftVector.multiply(easedProgress)))
+                calcFunc(easedProgress)
                 if(progress>=1){
-                    entity.setCoordinates2(coords2)
                     this.removeUpdater(updater)
                 }
             }
@@ -163,24 +159,16 @@ export class Render {
             console.error("Duration must be a finite number and greater than 0")
         }
     }
-    setScale(entity, scale, duration = 1, timingFunc = animation.LINEAR){
-        if(duration>0 && typeof(duration) === 'number' && duration !== Infinity){
-            const startScale = entity.scale
-            const deltaScale = scale - entity.scale
-            let elapsed = 0
-            const updater = (dt)=>{
-                elapsed += dt
-                let progress = Math.min(elapsed/duration, 1)
-                let easedProgress = timingFunction(progress, timingFunc)
-                entity.scale = startScale + deltaScale*easedProgress
-                if(progress>=1){
-                    entity.scale = scale
-                    this.removeUpdater(updater)
-                }
-            }
-            this.addUpdater(updater)
-        } else{
-            console.error("Duration must be a finite number and greater than 0")
-        }
+    moveTo(entity, coords2, duration = 1, timingFunc = animation.EASE_IN_OUT){
+        const startPos = entity.getCoordinates2()
+        this.#changeProperties(entity, (easedProgress)=>{
+            entity.setCoordinates2(startPos.shift(coords2.subtract(startPos).multiply(easedProgress)))
+        }, duration, timingFunc)
+    }
+    setScale(entity, scale, duration = 1, timingFunc = animation.EASE_IN_OUT){
+        const startScale = entity.scale
+        this.#changeProperties(entity, (easedProgress)=>{
+            entity.scale = startScale + (scale - startScale)*easedProgress
+        }, duration, timingFunc)
     }
 }
