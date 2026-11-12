@@ -1,4 +1,4 @@
-export {Rectangle, Arc, Circle} from "./shapes.js"
+export {Rectangle, Arc, Circle, Line} from "./shapes.js"
 export {Vector2, Coordinates2} from "./math.js"
 export {createScreen, Render} from "./render.js"
 export {animation} from "./animation.js"

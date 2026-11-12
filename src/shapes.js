@@ -47,6 +47,28 @@ class Shape extends Entity{
         super(properties)
         this.color = properties.color ?? constants.COLORS.Blue
         this.strokeColor = properties.strokeColor ?? null
+        this.strokeWidth = properties.strokeWidth ?? 2
+    }
+}
+export class Line extends Shape{
+    constructor(properties = {}){
+        super(properties)
+        this.start = properties.start ?? new Coordinates2(0,0)
+        this.end = properties.end ?? new Coordinates2(10,10)
+        this.color = null
+        this.strokeColor = properties.color ?? constants.COLORS.Yellow
+    }
+    draw(ctx){
+        const vector = (this.end.subtract(this.start)).multiply(this.scale)
+        const endCoords = this.start.shift(vector)
+        ctx.beginPath();
+        if(this.strokeColor !== null){
+            ctx.strokeStyle = this.strokeColor;
+        }
+        ctx.lineWidth = this.strokeWidth;
+        ctx.moveTo(this.start.x, this.start.y);
+        ctx.lineTo(endCoords.x, endCoords.y);
+        ctx.stroke();
     }
 }
 export class Rectangle extends Shape{
@@ -61,7 +83,10 @@ export class Rectangle extends Shape{
     }
     draw(ctx){
         try{
-            ctx.fillStyle = this.color
+            if(this.color !== null){
+                ctx.fillStyle = this.color
+            }
+            ctx.lineWidth = this.strokeWidth;
             const wh = [this.width*this.scale, this.height*this.scale]
             ctx.fillRect(
                 this.x - wh[0]/2,
@@ -93,6 +118,7 @@ export class Arc extends Shape{
                 ctx.fillStyle = this.color
                 ctx.fill()
             }
+            ctx.lineWidth = this.strokeWidth;
             if(this.strokeColor !== null){
                 ctx.strokeStyle = this.strokeColor
                 ctx.stroke()

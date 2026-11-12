@@ -4,22 +4,12 @@ const renderer = new TinieAnim.Render(canvas.element)
 const rect = new TinieAnim.Rectangle({
     x: 100, y: 200, color: TinieAnim.COLORS.Red
 })
-const circ = new TinieAnim.Circle({x: 200, y: 100})
-let speed = 90
-let rectUpdater = (dt)=>{
-    rect.x += speed*dt
-    rect.y += speed*dt
-}
+const line = new TinieAnim.Line({
+    start: new TinieAnim.Coordinates2(20, 40),
+    end: new TinieAnim.Coordinates2(80, 90)
+})
 renderer.setBackgroundColor(TinieAnim.COLORS.Void)
-renderer.addEntities(rect, circ)
+renderer.addEntities(rect, line)
 renderer.render()
 renderer.play()
-renderer.moveTo(circ, new TinieAnim.Coordinates2(30,170), 2, TinieAnim.animation.EASE_IN_OUT)
-renderer.addUpdater(rectUpdater)
-await renderer.wait(1000)
-renderer.removeUpdater(rectUpdater)
-rect.color = TinieAnim.COLORS.Yellow
-renderer.moveTo(rect, new TinieAnim.Coordinates2(100,100), 1)
-renderer.setScale(rect, 2, 1)
-await renderer.wait(1000)
-renderer.setScale(rect, 1, 1)
+renderer.moveTo(line, new TinieAnim.Coordinates2(90, 90))
