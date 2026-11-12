@@ -61,7 +61,7 @@ export class Render {
         this.#isRendered = true
     }
     play(){
-        if(this.#isRendered){
+        if(this.#isRendered && !this.#isPlaying){
             this.#isPlaying = true
             requestAnimationFrame(this.#loop.bind(this))
         } else{
@@ -142,7 +142,7 @@ export class Render {
             setTimeout(resolve, ms)
         })
     }
-    #changeProperties(entity, calcFunc, duration = 1, timingFunc = animation.LINEAR){
+    #changeProperties(calcFunc, duration = 1, timingFunc = animation.LINEAR){
         if(duration>0 && typeof(duration) === 'number' && duration !== Infinity){
             let elapsed = 0
             const updater = (dt)=>{
@@ -161,13 +161,13 @@ export class Render {
     }
     moveTo(entity, coords2, duration = 1, timingFunc = animation.EASE_IN_OUT){
         const startPos = entity.getCoordinates2()
-        this.#changeProperties(entity, (easedProgress)=>{
+        this.#changeProperties((easedProgress)=>{
             entity.setCoordinates2(startPos.shift(coords2.subtract(startPos).multiply(easedProgress)))
         }, duration, timingFunc)
     }
     setScale(entity, scale, duration = 1, timingFunc = animation.EASE_IN_OUT){
         const startScale = entity.scale
-        this.#changeProperties(entity, (easedProgress)=>{
+        this.#changeProperties((easedProgress)=>{
             entity.scale = startScale + (scale - startScale)*easedProgress
         }, duration, timingFunc)
     }

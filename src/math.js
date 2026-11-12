@@ -47,7 +47,7 @@ export function CubicBezierCurve(t, isX = true, controlPoints = [[0.5,0],[0.5,1]
     }
 }
 //đơn điệu + đồng biến
-export function BinarySearch(target, func, min=0, max=1, decimalPoint = 3){
+export function BinarySearch(target, func, min=0, max=1, decimalPoint = 6){
     let l = min
     let r = max
     let i = (r + l)/2
