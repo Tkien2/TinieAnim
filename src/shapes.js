@@ -1,5 +1,13 @@
 import * as constants from "./constants.js"
-import { Coordinates2 } from "./math.js"
+import { Coordinates2, Matrix, Vector2 } from "./math.js"
+function rotateVector(vector, angle){
+    const rotationMatrix = new Matrix([
+        [Math.cos(angle), - Math.sin(angle)],
+        [Math.sin(angle), Math.cos(angle)]
+    ])
+    const vectorInMatrix = rotationMatrix.multiply(vector.toMatrix())
+    return new Vector2(vectorInMatrix[0][0], vectorInMatrix[1][0])
+}
 class Entity {
     constructor(properties = {}){
         this.x = properties.x ?? 0
@@ -7,6 +15,7 @@ class Entity {
         this.name = properties.name ?? "TinieEntity"
         this.id = -1
         this.scale = 1
+        this.rotate = 0
     }
     getCoordinates2(){
         return new Coordinates2(this.x, this.y)
@@ -33,14 +42,14 @@ class Entity {
             console.error("Id must be a number")
         }
     }
-    copy(){
-        try{
-            return this
-        }
-        catch(e){
-            console.error("Can not copy",this,"==========\n",e)
-        }
-    }
+    // copy(){
+    //     try{
+    //         return this
+    //     }
+    //     catch(e){
+    //         console.error("Can not copy",this,"==========\n",e)
+    //     }
+    // }
 }
 class Shape extends Entity{
     constructor(properties = {}){
@@ -72,14 +81,31 @@ export class Line extends Shape{
     }
 }
 export class Rectangle extends Shape{
+    #vectors
     constructor(properties = {}){
         super(properties)
         this.width = properties.width ?? 50
         this.height = properties.height ?? 50
+        // No uses
+        this.#vectors = [
+            new Vector2(-this.width/2, -this.height/2),
+            new Vector2(this.width/2, -this.height/2),
+            new Vector2(this.width/2, this.height/2),
+            new Vector2(-this.width/2, this.height/2)
+        ]
+    }
+    #updateVectors(){
+        this.#vectors = [
+            new Vector2(-this.width/2, -this.height/2),
+            new Vector2(this.width/2, -this.height/2),
+            new Vector2(this.width/2, this.height/2),
+            new Vector2(-this.width/2, this.height/2)
+        ]
     }
     resize(width, height){
         this.width = width
         this.height = height
+        this.#updateVectors()
     }
     draw(ctx){
         try{
