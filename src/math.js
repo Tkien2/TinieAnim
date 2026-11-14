@@ -24,7 +24,7 @@ export class Matrix{
                 }
                 for(const value of row){
                     if(typeof value !== 'number' || !Number.isFinite(value)){
-                        console.error("Value is not valid")
+                        console.error("Value is not valid",this.#matrix)
                         this.#isValid = false
                         return
                     }
@@ -38,6 +38,13 @@ export class Matrix{
     }
     isValid(){
         return this.#isValid
+    }
+    changeValue(rowIndex, columnIndex, value){
+        if(Number.isFinite(rowIndex) && Number.isFinite(columnIndex) && Number.isFinite(value)){
+            this.#matrix[rowIndex][columnIndex] = value
+        } else{
+            console.error("All parameters must be finite numbers")
+        }
     }
     multiply(matrix){
         let A = {

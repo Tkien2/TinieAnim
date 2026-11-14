@@ -1,4 +1,5 @@
 import { animation, timingFunction } from "./animation.js"
+import { Matrix } from "./math.js"
 export function createScreen(width, height, parent = null, scale = 1){
     const canvas = document.createElement("canvas")
     canvas.height = height
@@ -142,33 +143,56 @@ export class Render {
             setTimeout(resolve, ms)
         })
     }
+    //Công thức chung: [giá trị đầu] + [biến thiên cuối - đầu]*[tiến độ]
     #changeProperties(calcFunc, duration = 1, timingFunc = animation.LINEAR){
-        if(duration>0 && typeof(duration) === 'number' && duration !== Infinity){
-            let elapsed = 0
-            const updater = (dt)=>{
-                elapsed += dt
-                let progress = Math.min(elapsed/duration, 1)
-                let easedProgress = timingFunction(progress, timingFunc)
-                calcFunc(easedProgress)
-                if(progress>=1){
-                    this.removeUpdater(updater)
+        if(duration>0 && Number.isFinite(duration)){
+            return new Promise(resolve => {
+                let elapsed = 0
+                const updater = (dt)=>{
+                    elapsed += dt
+                    let progress = Math.min(elapsed/duration, 1)
+                    let easedProgress = timingFunction(progress, timingFunc)
+                    calcFunc(easedProgress)
+                    if(progress>=1){
+                        this.removeUpdater(updater)
+                        resolve()
+                    }
                 }
-            }
-            this.addUpdater(updater)
+                this.addUpdater(updater)
+            })
         } else{
             console.error("Duration must be a finite number and greater than 0")
         }
     }
-    moveTo(entity, coords2, duration = 1, timingFunc = animation.EASE_IN_OUT){
+    async moveTo(entity, coords2, duration = 1, timingFunc = animation.EASE_IN_OUT){
         const startPos = entity.getCoordinates2()
-        this.#changeProperties((easedProgress)=>{
+        await this.#changeProperties((easedProgress)=>{
             entity.setCoordinates2(startPos.shift(coords2.subtract(startPos).multiply(easedProgress)))
         }, duration, timingFunc)
     }
-    setScale(entity, scale, duration = 1, timingFunc = animation.EASE_IN_OUT){
-        const startScale = entity.scale
-        this.#changeProperties((easedProgress)=>{
-            entity.scale = startScale + (scale - startScale)*easedProgress
+    async setScale(entity, scale, duration = 1, timingFunc = animation.EASE_IN_OUT){
+        const startScale = entity.getScale()
+        await this.#changeProperties((easedProgress)=>{
+            entity.scale(startScale + (scale - startScale)*easedProgress)
+        }, duration, timingFunc)
+    }
+    async rotate(entity, rad, duration = 1, timingFunc = animation.EASE_IN_OUT){
+        const startAngle = entity.getRotationAngle()
+        await this.#changeProperties((easedProgress)=>{
+            entity.rotate(startAngle + (rad - startAngle)*easedProgress)
+        }, duration, timingFunc)
+    }
+    async maxtrixTransform(entity, matrix, duration = 1, timingFunc = animation.EASE_IN_OUT){
+        let m = new Matrix([[0,0],[0,0]])
+        const entityMatrix = entity.getCustomMatrix()
+        await this.#changeProperties((easedProgress)=>{
+            for(let r = 0; r < entityMatrix.getMatrix().length; r++){
+                for(let c = 0; c < entityMatrix.getMatrix()[r].length; c++){
+                    const cellValue = entityMatrix.getMatrix()[r][c]
+                    m.changeValue(r,c, cellValue + (matrix.getMatrix()[r][c] - cellValue)*easedProgress)
+                }
+            }
+            entity.transform(m)
         }, duration, timingFunc)
     }
 }
