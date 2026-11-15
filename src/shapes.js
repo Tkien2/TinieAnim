@@ -6,11 +6,14 @@ Trong trường hợp bản thân đọc lại code và đếch hiểu gì:
 - Xoay, thu phóng đều được thực hiện thông qua việc nhân ma trận với vector
 - Render chỉ render các vector được biến đổi, giá trị vector gốc được giữ lại
 */
+// TODO: quay mũi tên!
+const rotationMatrix = new Matrix([[],[]])
 function getRotationMatrix(angle){
-    return new Matrix([
+    rotationMatrix.setMatrix([
         [Math.cos(angle), - Math.sin(angle)],
         [Math.sin(angle), Math.cos(angle)]
     ])
+    return rotationMatrix
 }
 class Entity {
     #rotationAngle
@@ -75,6 +78,7 @@ class Entity {
 }
 class Shape extends Entity{
     #vectors = []
+    #scaleMatrix
     #customMatrix = new Matrix([[1,0],[0,1]])
     #originalVectors
     constructor(properties = {}){
@@ -82,6 +86,7 @@ class Shape extends Entity{
         this.color = properties.color ?? constants.COLORS.Blue
         this.strokeColor = properties.strokeColor ?? null
         this.strokeWidth = properties.strokeWidth ?? 2
+        this.#scaleMatrix = new Matrix([[this.getScale(),0],[0,this.getScale()]])
     }
     getCustomMatrix(){
         return this.#customMatrix
@@ -99,6 +104,7 @@ class Shape extends Entity{
         this.#vectors = vectorsArray
     }
     updateVectors(){
+        this.#scaleMatrix.setMatrix([[this.getScale(),0],[0,this.getScale()]])
         const ogVectorLength = this.#originalVectors.length
         if(this.#vectors.length < ogVectorLength){
             this.#vectors = []
@@ -106,7 +112,7 @@ class Shape extends Entity{
                 this.#vectors.push(new Vector2(0,0))
             }
         }
-        const matrix = getRotationMatrix(this.getRotationAngle()).multiply(this.#customMatrix.multiply(new Matrix([[this.getScale(),0],[0,this.getScale()]])))
+        const matrix = getRotationMatrix(this.getRotationAngle()).multiply(this.#customMatrix.multiply(this.#scaleMatrix))
         for(let i = 0; i < this.#vectors.length; i++){
             let vector = this.#originalVectors[i].toMatrix()
             vector = matrix.multiply(vector)
@@ -137,6 +143,15 @@ export class Line extends Shape{
         ])
         this.updateVectors()
     }
+    getAngle(){
+        return Math.atan2(this.getVectors()[0].y, this.getVectors()[0].x)
+    }
+    getStartPoint(){
+        return this.#start
+    }
+    getEndPoint(){
+        return this.#end
+    }
     setStartAndEndPoint(start, end){
         this.#start = start
         this.#end = end
@@ -154,6 +169,47 @@ export class Line extends Shape{
         ctx.moveTo(this.#start.x, this.#start.y);
         ctx.lineTo(this.getVectors()[0].x + this.#start.x, this.getVectors()[0].y + this.#start.y);
         ctx.stroke()
+    }
+}
+export class Arrow extends Line{
+    constructor(properties = {}){
+        super(properties)
+        this.arrowTipScale = properties.arrowTipScale ?? 1
+        this.setOriginalVectors([
+            this.getEndPoint().subtract(this.getStartPoint()),
+            new Vector2(-5*this.arrowTipScale, -5*this.arrowTipScale),
+            new Vector2(-5*this.arrowTipScale, 5*this.arrowTipScale)
+        ])
+        this.updateVectors()
+    }
+    draw(ctx){
+        ctx.beginPath();
+        if(this.strokeColor !== null){
+            ctx.strokeStyle = this.strokeColor;
+        }
+        ctx.lineWidth = this.strokeWidth;
+        const end = {
+            x: this.getVectors()[0].x + this.getStartPoint().x, 
+            y: this.getVectors()[0].y + this.getStartPoint().y
+        }
+        ctx.moveTo(this.getStartPoint().x, this.getStartPoint().y);
+        ctx.lineTo(end.x, end.y);
+        ctx.stroke()
+        this.drawTip(ctx, end)
+    }
+    drawTip(ctx, end){
+        // Arrow tip
+        ctx.moveTo(end.x, end.y)
+        ctx.lineTo(end.x + this.getVectors()[1].x, end.y + this.getVectors()[1].y)
+        ctx.stroke()
+        ctx.moveTo(end.x, end.y)
+        ctx.lineTo(end.x + this.getVectors()[1].x, end.y + this.getVectors()[2].y)
+        ctx.stroke()
+    }
+    rotateArrowTip(rad){
+        for(let i = 1; i < this.getVectors().length; i ++){
+
+        }
     }
 }
 export class Rectangle extends Shape{

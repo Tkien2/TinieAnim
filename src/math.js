@@ -5,6 +5,13 @@ export class Matrix{
         this.#matrix = matrix
         this.#checkMatrix()
     }
+    setMatrix(matrix){
+        if(Array.isArray(matrix)){
+            this.#matrix = matrix
+        } else{
+            throw TypeError("Matrix must be an array")
+        }
+    }
     getMatrix(){
         return this.#matrix
     }
@@ -79,6 +86,14 @@ export class Vector2{
     constructor(x,y){
         this.x = x
         this.y = y
+    }
+    setVector(x,y){
+        if(Number.isFinite(x) && Number.isFinite(y)){
+            this.x = x
+            this.y = y
+        } else{
+            throw TypeError("x and y must be finite numbers")
+        }
     }
     getLength(){
         return Math.sqrt(this.x*this.x + this.y*this.y)
