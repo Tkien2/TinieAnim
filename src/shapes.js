@@ -21,9 +21,12 @@ class Entity {
     constructor(properties = {}){
         this.x = properties.x ?? 0
         this.y = properties.y ?? 0
-        this.name = properties.name ?? "TinieEntity"
+        this.entityName = properties.entityName ?? "TinieEntity"
         this.id = -1
         this.#rotationAngle = 0
+    }
+    getCoordinates(){
+        return new Coordinates2(this.x, this.y)
     }
     scale(k){
         if (Number.isFinite(k)){
@@ -103,6 +106,9 @@ class Shape extends Entity{
     setVectors(vectorsArray){
         this.#vectors = vectorsArray
     }
+    resetVectors(){
+        this.#vectors = this.#originalVectors
+    }
     updateVectors(){
         this.#scaleMatrix.setMatrix([[this.getScale(),0],[0,this.getScale()]])
         const ogVectorLength = this.#originalVectors.length
@@ -126,6 +132,51 @@ class Shape extends Entity{
             this.updateVectors()
         } else{
             console.error("Matrix is invalid", matrix)
+        }
+    }
+}
+// Tôi đéo biết tại sao Group lại kế thừa từ Shape
+export class Group{
+    #vector
+    #entities
+    constructor(...entities){
+        this.#entities = entities
+        this.coordsArray = []
+        this.updateCoordsArray(this.#entities)
+    }
+    getEntities(){
+        return this.#entities
+    }
+    addEntities(...entities){
+        for(const entity of entities){
+            this.#entities.push(entity)
+        }
+        this.updateCoordsArray(this.#entities)
+    }
+    updateCoordsArray(...entities){
+        for(const entity of entities){
+            if(entity.x !== null && entity.y !== null){
+                this.coordsArray.push(new Coordinates2(entity.x, entity.y))
+            }
+        }
+    }
+    async applyFunction(func){
+        for(const entity of this.#entities){
+            func(entity)
+        }
+    }
+    shift(vector){
+        if(vector.constructor.name == "Vector2"){
+            for(const entity of this.#entities){
+                entity.shift(vector)
+            }
+        } else{
+            throw TypeError("'vector' must be a vector", vector)
+        }
+    }
+    draw(ctx){
+        for(const entity of this.#entities){
+            entity.draw(ctx)
         }
     }
 }
@@ -156,7 +207,7 @@ export class Line extends Shape{
         this.#start = start
         this.#end = end
         this.setOriginalVectors([
-            new Vector2(this.#end.subtract(this.#start))
+            this.#end.subtract(this.#start)
         ])
         this.updateVectors()
     }
@@ -172,15 +223,23 @@ export class Line extends Shape{
     }
 }
 export class Arrow extends Line{
+    #arrowTipVector
+    #renderedArrowTipVector
     constructor(properties = {}){
         super(properties)
         this.arrowTipScale = properties.arrowTipScale ?? 1
         this.setOriginalVectors([
             this.getEndPoint().subtract(this.getStartPoint()),
-            new Vector2(-5*this.arrowTipScale, -5*this.arrowTipScale),
-            new Vector2(-5*this.arrowTipScale, 5*this.arrowTipScale)
         ])
         this.updateVectors()
+        this.#arrowTipVector = [
+            new Vector2(-5*this.arrowTipScale, -5*this.arrowTipScale),
+            new Vector2(-5*this.arrowTipScale, 5*this.arrowTipScale)
+        ]
+        this.#renderedArrowTipVector = [
+            new Vector2(-5*this.arrowTipScale, -5*this.arrowTipScale),
+            new Vector2(-5*this.arrowTipScale, 5*this.arrowTipScale)
+        ]
     }
     draw(ctx){
         ctx.beginPath();
@@ -195,20 +254,23 @@ export class Arrow extends Line{
         ctx.moveTo(this.getStartPoint().x, this.getStartPoint().y);
         ctx.lineTo(end.x, end.y);
         ctx.stroke()
-        this.drawTip(ctx, end)
+        if(this.getVectors()[0].getLength() !== 0){
+            this.drawTip(ctx, end)
+        }
     }
     drawTip(ctx, end){
         // Arrow tip
+        this.rotateArrowTip(this.getAngle())
         ctx.moveTo(end.x, end.y)
-        ctx.lineTo(end.x + this.getVectors()[1].x, end.y + this.getVectors()[1].y)
-        ctx.stroke()
+        ctx.lineTo(end.x + this.#renderedArrowTipVector[0].x, end.y + this.#renderedArrowTipVector[0].y)
         ctx.moveTo(end.x, end.y)
-        ctx.lineTo(end.x + this.getVectors()[1].x, end.y + this.getVectors()[2].y)
+        ctx.lineTo(end.x + this.#renderedArrowTipVector[1].x, end.y + this.#renderedArrowTipVector[1].y)
         ctx.stroke()
     }
     rotateArrowTip(rad){
-        for(let i = 1; i < this.getVectors().length; i ++){
-
+        for(let i = 0; i < this.#renderedArrowTipVector.length; i ++){
+            let vector = getRotationMatrix(rad).multiply(this.#arrowTipVector[i].toMatrix())
+            this.#renderedArrowTipVector[i].setVector(vector.getMatrix()[0][0], vector.getMatrix()[1][0])
         }
     }
 }
@@ -234,9 +296,6 @@ export class Rectangle extends Shape{
     draw(ctx){
         try{
             ctx.beginPath()
-            if(this.strokeColor !== null){
-                ctx.strokeStyle = this.strokeColor;
-            }
             ctx.lineWidth = this.strokeWidth;
             const vectors = this.getVectors()
             ctx.moveTo(vectors[0].x + this.x, vectors[0].y + this.y)
@@ -248,8 +307,11 @@ export class Rectangle extends Shape{
                 ctx.fillStyle = this.color
                 ctx.fill()
             }
-            ctx.stroke()
             ctx.closePath()
+            if(this.strokeColor !== null){
+                ctx.strokeStyle = this.strokeColor;
+                ctx.stroke()
+            }
         }catch(e){
             console.error("Can not draw this Entity\n", e)
         }
@@ -280,7 +342,7 @@ export class Arc extends Shape{
     draw(ctx){
         try{
             ctx.beginPath()
-            ctx.arc(this.x, this.y, this.#renderRadius*this.#renderRadius, this.startAngle, this.endAngle)
+            ctx.arc(this.x, this.y, this.#renderRadius*this.getScale(), this.startAngle, this.endAngle)
             if(this.color !== null){
                 ctx.fillStyle = this.color
                 ctx.fill()

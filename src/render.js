@@ -1,11 +1,14 @@
 import { animation, timingFunction } from "./animation.js"
-import { Matrix } from "./math.js"
-export function createScreen(width, height, parent = null, scale = 1){
+import { Coordinates2, Matrix } from "./math.js"
+export function createScreen(width, height, parent = null, scale = 1, flipYAxis = true){
     const canvas = document.createElement("canvas")
     canvas.height = height
     canvas.width = width
     canvas.style.scale = scale
-
+    if(flipYAxis){
+        canvas.getContext("2d").translate(0, canvas.height)
+        canvas.getContext("2d").scale(1, -1)
+    }
     const parentElement = parent ?? document.querySelector("body")
     parentElement.insertAdjacentElement("beforeend", canvas)
     return {
@@ -14,6 +17,7 @@ export function createScreen(width, height, parent = null, scale = 1){
     }
 }
 export class Render {
+    //Chỉnh toạ độ thì sửa toạ độ này, tránh tạo nhiều object
     #lastTimestamp = 0
     #isPlaying = false
     #entities = []
@@ -32,8 +36,8 @@ export class Render {
     addEntities(...entities){
         for(let e of entities){
             this.#entities.push(e)
-            e.setId(this.currentId)
-            this.currentId += 1
+            // e.setId(this.currentId)
+            // this.currentId += 1
         }
     }
     removeEntities(...entities){
@@ -88,6 +92,7 @@ export class Render {
                         func(this.#dt)
                     } catch(e){
                         console.error("There is something wrong with updateFunction.\n", e)
+                        this.pause()
                     }
                 }
             }
@@ -143,7 +148,7 @@ export class Render {
             setTimeout(resolve, ms)
         })
     }
-    //Công thức chung: [giá trị đầu] + [biến thiên cuối - đầu]*[tiến độ]
+    //Công thức chung: [giá trị đầu] + [biến thiên]*[tiến độ]
     #changeProperties(calcFunc, duration = 1, timingFunc = animation.LINEAR){
         if(duration>0 && Number.isFinite(duration)){
             return new Promise(resolve => {
@@ -164,11 +169,15 @@ export class Render {
             console.error("Duration must be a finite number and greater than 0")
         }
     }
+    // TODO: nhớ kiểm tra lại xem có tạo Object mới không cần thiết không
     async moveTo(entity, coords2, duration = 1, timingFunc = animation.EASE_IN_OUT){
         const startPos = entity.getCoordinates2()
         await this.#changeProperties((easedProgress)=>{
             entity.setCoordinates2(startPos.shift(coords2.subtract(startPos).multiply(easedProgress)))
         }, duration, timingFunc)
+    }
+    async shift(entity, vector2, duration = 1, timingFunc = animation.EASE_IN_OUT){
+        await this.moveTo(entity, entity.getCoordinates().shift(vector2), duration, timingFunc)
     }
     async setScale(entity, scale, duration = 1, timingFunc = animation.EASE_IN_OUT){
         const startScale = entity.getScale()
@@ -182,7 +191,7 @@ export class Render {
             entity.rotate(startAngle + (rad - startAngle)*easedProgress)
         }, duration, timingFunc)
     }
-    async maxtrixTransform(entity, matrix, duration = 1, timingFunc = animation.EASE_IN_OUT){
+    async transform(entity, matrix, duration = 1, timingFunc = animation.EASE_IN_OUT){
         let m = new Matrix([[0,0],[0,0]])
         const entityMatrix = entity.getCustomMatrix()
         await this.#changeProperties((easedProgress)=>{
@@ -194,5 +203,24 @@ export class Render {
             }
             entity.transform(m)
         }, duration, timingFunc)
+    }
+    async setStartAndEndPoint(entity, start, end, duration = 1, timingFunc){
+        if(entity.constructor.name === "Line" || entity.constructor.name === "Arrow"){
+            const start0 = entity.getStartPoint()
+            const end0 = entity.getEndPoint()
+            const coords1 = new Coordinates2()
+            const coords2 = new Coordinates2()
+            await this.#changeProperties((easedProgress)=>{
+                coords1.setCoordinates2(
+                    start0.x + (start.x - start0.x)*easedProgress,
+                    start0.y + (start.y - start0.y)*easedProgress
+                )
+                coords2.setCoordinates2(
+                    end0.x + (end.x - end0.x)*easedProgress,
+                    end0.y + (end.y - end0.y)*easedProgress
+                )
+                entity.setStartAndEndPoint(coords1,coords2)
+            }, duration, timingFunc)
+        }
     }
 }

@@ -113,11 +113,33 @@ export class Vector2{
     copy(){
         return this
     }
+    dot(vector){
+        if(vector.constructor.name === "Vector2"){
+            return this.x*vector.x + this.y*vector.y
+        } else{
+            throw TypeError("'vector' must be a vector", vector)
+        }
+    }
+    isEqual(vector){
+        if(vector.constructor.name === "Vector2"){
+            return this.x == vector.x && this.y == vector.y
+        }else{
+            throw TypeError("'vector' must be a vector", vector)
+        }
+    }
 }
 export class Coordinates2{
     constructor(x,y){
         this.x = x
         this.y = y
+    }
+    setCoordinates2(x,y){
+        if(Number.isFinite(x) && Number.isFinite(y)){
+            this.x = x
+            this.y = y
+        } else{
+            throw TypeError("x and y must be finite numbers")
+        }
     }
     subtract(coords2){
         return new Vector2(this.x - coords2.x, this.y - coords2.y)
@@ -127,6 +149,13 @@ export class Coordinates2{
     }
     copy(){
         return this
+    }
+    isEqual(coords){
+        if(coords.constructor.name === "Coordinates2"){
+            return this.x == coords.x && this.y == coords.y
+        }else{
+            throw TypeError("'coords' must be a vector", coords)
+        }
     }
 }
 export function CubicBezierCurve(t, isX = true, controlPoints = [[0.5,0],[0.5,1]]){
