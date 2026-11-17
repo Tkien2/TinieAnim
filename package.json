@@ -1,0 +1,26 @@
+{
+  "name": "tinieanim",
+  "version": "0.1.0-alpha.1",
+  "description": "A JavaScript animation library",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Tkien2/TinieAnim.git"
+  },
+  "keywords": [
+    "javascript",
+    "animation",
+    "tinieanim",
+    "tkien2"
+  ],
+  "author": "TKien2",
+  "license": "MIT",
+  "type": "module",
+  "bugs": {
+    "url": "https://github.com/Tkien2/TinieAnim/issues"
+  },
+  "homepage": "https://github.com/Tkien2/TinieAnim#readme"
+}

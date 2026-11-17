@@ -1,4 +1,14 @@
 # TinieAnim
-Thư viện Javascript đơn giản dùng để tạo animation.
+A JavaScript animation library
 
-Thư viện chỉ do một người làm vì lười học API của thư viện khác.
+![version](https://img.shields.io/badge/version-0.1.0--alpha.1-blue?style=for-the-badge)
+
+![license](https://img.shields.io/badge/license-MIT-blue)
+![status](https://img.shields.io/badge/status-WIP-green)
+
+# Important Notice
+This library is currently **unstable**.
+
+**Not recommended** for production use.
+
+Documentation is not available yet.
