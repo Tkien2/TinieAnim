@@ -1,16 +1,16 @@
 import { animation, timingFunction } from "./animation.js"
 import { Coordinates2, Matrix } from "./math.js"
-export function createScreen(width, height, parent = null, scale = 1, flipYAxis = true){
+export function createScreen(width, height, parent = null, position = "beforeend", scale = 1, flipYAxis = true) {
     const canvas = document.createElement("canvas")
     canvas.height = height
     canvas.width = width
     canvas.style.scale = scale
-    if(flipYAxis){
+    if (flipYAxis) {
         canvas.getContext("2d").translate(0, canvas.height)
         canvas.getContext("2d").scale(1, -1)
     }
     const parentElement = parent ?? document.querySelector("body")
-    parentElement.insertAdjacentElement("beforeend", canvas)
+    parentElement.insertAdjacentElement(position, canvas)
     return {
         element: canvas,
         ctx: canvas.getContext("2d")
