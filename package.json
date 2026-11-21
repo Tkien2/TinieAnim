@@ -1,6 +1,6 @@
 {
   "name": "tinieanim",
-  "version": "0.1.1",
+  "version": "0.1.1-alpha",
   "description": "A JavaScript animation library",
   "main": "index.js",
   "scripts": {
