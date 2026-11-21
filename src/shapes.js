@@ -342,7 +342,7 @@ export class Arc extends Shape{
     draw(ctx){
         try{
             ctx.beginPath()
-            ctx.arc(this.x, this.y, this.#renderRadius*this.getScale(), this.startAngle, this.endAngle)
+            ctx.arc(this.x, this.y, this.#renderRadius, this.startAngle, this.endAngle)
             if(this.color !== null){
                 ctx.fillStyle = this.color
                 ctx.fill()
