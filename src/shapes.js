@@ -6,7 +6,6 @@ Trong trường hợp bản thân đọc lại code và đếch hiểu gì:
 - Xoay, thu phóng đều được thực hiện thông qua việc nhân ma trận với vector
 - Render chỉ render các vector được biến đổi, giá trị vector gốc được giữ lại
 */
-// TODO: quay mũi tên!
 const rotationMatrix = new Matrix([[],[]])
 function getRotationMatrix(angle){
     rotationMatrix.setMatrix([
@@ -319,7 +318,6 @@ export class Rectangle extends Shape{
 }
 export class Arc extends Shape{
     #renderRadius
-    #scale = 1
     constructor(properties = {}){
         super(properties)
         this.radius = properties.radius ?? 25
@@ -332,12 +330,8 @@ export class Arc extends Shape{
     resize(radius){
         this.radius = radius
     }
-    scale(k){
-        this.#renderRadius = k*this.radius
-        this.#scale = k
-    }
-    getScale(){
-        return this.#scale
+    updateVectors(){
+        this.#renderRadius = this.getScale()*this.radius
     }
     draw(ctx){
         try{
