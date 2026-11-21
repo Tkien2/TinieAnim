@@ -84,6 +84,7 @@ export class Render {
     #loop(timestamp){
         timestamp = timestamp ?? 0
         this.#dt = this.#lastTimestamp === null ? 0 : (timestamp - this.#lastTimestamp)/1000
+        this.#dt = Math.min(this.#dt, 0.01667)
         this.#lastTimestamp = timestamp
         if(this.#isPlaying){
             for(let func of this.#updateFunctions){
