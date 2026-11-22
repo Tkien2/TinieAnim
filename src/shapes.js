@@ -6,6 +6,7 @@ Trong trường hợp bản thân đọc lại code và đếch hiểu gì:
 - Xoay, thu phóng đều được thực hiện thông qua việc nhân ma trận với vector
 - Render chỉ render các vector được biến đổi, giá trị vector gốc được giữ lại
 */
+// TODO: THỐNG NHẤT getCoordinates2
 const rotationMatrix = new Matrix([[],[]])
 function getRotationMatrix(angle){
     rotationMatrix.setMatrix([
@@ -135,13 +136,43 @@ class Shape extends Entity{
     }
 }
 // Tôi đéo biết tại sao Group lại kế thừa từ Shape
+// Nên dùng hàm cập nhật vector của Shape, buồn ngủ quá, rảnh thì sửa
 export class Group{
-    #vector
+    #coords = new Coordinates2(0,0)
+    #vectors = []
     #entities
     constructor(...entities){
         this.#entities = entities
         this.coordsArray = []
         this.updateCoordsArray(this.#entities)
+        this.updateCoordinates()
+        this.updateVectors()
+    }
+    updateAll(){
+        this.updateCoordsArray(this.#entities)
+        this.updateVectors()
+    }
+    updateVectors(){
+        this.#vectors = []
+        for(const coords of this.coordsArray){
+            this.#vectors.push(coords.subtract(this.#coords))
+        }
+    }
+    updateCoordinates(){
+        let x = 0
+        let y = 0
+        for(const coords of this.coordsArray){
+            x += coords.x
+            y += coords.y
+        }
+        this.#coords.setCoordinates2(x/this.coordsArray.length, y/this.coordsArray.length)
+    }
+    setCoordinates2(coords){
+        this.#coords = coords
+        this.moveTo(coords)
+    }
+    getCoordinates2(){
+        return this.#coords
     }
     getEntities(){
         return this.#entities
@@ -153,9 +184,10 @@ export class Group{
         this.updateCoordsArray(this.#entities)
     }
     updateCoordsArray(...entities){
-        for(const entity of entities){
+        this.coordsArray = []
+        for(const entity of entities[0]){
             if(entity.x !== null && entity.y !== null){
-                this.coordsArray.push(new Coordinates2(entity.x, entity.y))
+                this.coordsArray.push(entity.getCoordinates2())
             }
         }
     }
@@ -166,11 +198,25 @@ export class Group{
     }
     shift(vector){
         if(vector.constructor.name == "Vector2"){
+            this.#coords =this.#coords.shift(vector)
             for(const entity of this.#entities){
                 entity.shift(vector)
+                console.log(entity.x);
             }
+            this.updateAll()
         } else{
             throw TypeError("'vector' must be a vector", vector)
+        }
+    }
+    moveTo(coordinates){
+        if(coordinates.constructor.name == "Coordinates2"){
+            this.#coords = coordinates
+            for(let i = 0; i < this.#entities.length; i++){
+                this.#entities[i].moveTo(coordinates.shift(this.#vectors[i]))
+            }
+            this.updateAll()
+        } else{
+            throw TypeError("'coordinates' must be a coordinates", coordinates)
         }
     }
     draw(ctx){
@@ -179,6 +225,7 @@ export class Group{
         }
     }
 }
+// Why?
 export class Line extends Shape{
     #start
     #end
@@ -210,6 +257,20 @@ export class Line extends Shape{
         ])
         this.updateVectors()
     }
+    moveTo(coords){
+        this.#start = coords
+        this.#end = coords.shift(this.getOriginalVectors()[0])
+    }
+    shift(vector){
+        if(vector.constructor.name == "Vector2"){
+            this.setStartAndEndPoint(
+                this.#start.shift(vector),
+                this.#end.shift(vector)
+            )
+        } else{
+            throw TypeError("'vector' must be a vector", vector)
+        }
+    }
     draw(ctx){
         ctx.beginPath();
         if(this.strokeColor !== null){
@@ -219,6 +280,9 @@ export class Line extends Shape{
         ctx.moveTo(this.#start.x, this.#start.y);
         ctx.lineTo(this.getVectors()[0].x + this.#start.x, this.getVectors()[0].y + this.#start.y);
         ctx.stroke()
+    }
+    getCoordinates2(){
+        return this.#start
     }
 }
 export class Arrow extends Line{

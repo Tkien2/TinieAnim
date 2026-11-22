@@ -193,3 +193,28 @@ export function BinarySearch(target, func, min=0, max=1, decimalPoint = 6){
     console.warn("Can not find the value you are looking for")
     return undefined
 }
+function getNiceStep(value, n){
+    if(value == 0){
+        throw new Error("value can not be 0")
+    }
+    const rawStep = Math.abs(value)/n
+    const step = 10**(Math.floor(Math.log10(rawStep)))
+    const niceStepsArray = [1,2,5]
+    const closest = {
+        index: 0,
+        value: null
+    }
+    for(let i = 0; i < niceStepsArray.length; i++){
+        let delta = Math.abs(niceStepsArray[i]*step-rawStep)
+        if(closest.value == null){
+            closest.index = i
+            closest.value = delta
+        } else{
+            if(delta < closest.value){
+                closest.value = delta
+                closest.index = i
+            }
+        }
+    }
+    return niceStepsArray[closest.index]*step
+}

@@ -24,23 +24,11 @@ const a4 = new TinieAnim.Arrow({
     start: center,
     end: center.shift(new TinieAnim.Vector2(-50,-25))
 })
-const gr = new TinieAnim.Group(rect, a1, a2, a3, a4)
-const m = new TinieAnim.Matrix([
-    [1,1.3],
-    [0.7,2]
-])
-const m1 = new TinieAnim.Matrix([
-    [1.4,0.3],
-    [2.2,1.5]
-])
+const gr = new TinieAnim.Group(a1, a2, a3, a4)
 renderer.setBackgroundColor(TinieAnim.COLORS.Void)
 renderer.addEntities(gr)
 renderer.render()
 renderer.play()
-gr.applyFunction((entity)=>{
-    renderer.transform(entity,m)
-})
+renderer.moveTo(gr, new TinieAnim.Coordinates2(100,200))
 await renderer.wait(1000)
-gr.applyFunction((entity)=>{
-    renderer.transform(entity, m1)
-})
+renderer.pause()

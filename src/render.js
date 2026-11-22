@@ -178,7 +178,7 @@ export class Render {
         }, duration, timingFunc)
     }
     async shift(entity, vector2, duration = 1, timingFunc = animation.EASE_IN_OUT){
-        await this.moveTo(entity, entity.getCoordinates().shift(vector2), duration, timingFunc)
+        await this.moveTo(entity, entity.getCoordinates2().shift(vector2), duration, timingFunc)
     }
     async setScale(entity, scale, duration = 1, timingFunc = animation.EASE_IN_OUT){
         const startScale = entity.getScale()
