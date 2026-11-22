@@ -60,9 +60,13 @@ class Entity {
         this.x = coords2.x
         this.y = coords2.y
     }
-    shift(vector2){
-        this.x += vector2.x
-        this.y += vector2.y
+    shift(vector){
+        this.x += vector.x
+        this.y += vector.y
+    }
+    moveTo(coords){
+        this.x = coords.x
+        this.y = coords.y
     }
     draw(){
         console.error("This Entity does not have draw function")
@@ -159,13 +163,19 @@ export class Group{
         }
     }
     updateCoordinates(){
+        if(this.coordsArray.length == 0){
+            this.#coords.setCoordinates2(0,0)
+            return
+        }
         let x = 0
         let y = 0
         for(const coords of this.coordsArray){
             x += coords.x
             y += coords.y
         }
-        this.#coords.setCoordinates2(x/this.coordsArray.length, y/this.coordsArray.length)
+        this.x = x/this.coordsArray.length
+        this.y = y/this.coordsArray.length
+        this.#coords.setCoordinates2(this.x, this.y)
     }
     setCoordinates2(coords){
         this.#coords = coords
@@ -225,7 +235,61 @@ export class Group{
         }
     }
 }
+export class Text extends Entity{
+    constructor(properties = {}){
+        super(properties)
+        this.text = properties.text ?? "New Text"
+        this.textAlign = properties.textAlign ?? "center"
+        this.fontFamily = properties.fontFamily ?? "Arial"
+        this.fontSize = properties.fontSize ?? 25
+        this.textBaseline = properties.textBaseline ?? "middle"
+        this.color= properties.color ?? constants.COLORS.Blue
+        this.strokeColor = properties.strokeColor
+    }
+    draw(ctx){
+        ctx.font = `${this.fontSize}px ${this.fontFamily}`
+        ctx.textAlign = this.textAlign
+        ctx.textBaseline = this.textBaseline
+        ctx.fillStyle = this.color
+        ctx.strokeStyle = this.strokeColor ?? "transparent"
+        ctx.strokeText(this.text, this.x, this.y)
+        ctx.fillText(this.text, this.x, this.y)
+    }
+}
 // Why?
+export class Graph extends Shape{
+    #group
+    #xAxis
+    #yAxis
+    #plot
+    constructor(properties = {}){
+        super(properties)
+        this.isYFlip = properties.isYFlip ?? true
+        this.pxPerUnit = properties.pxPerUnit ?? 10
+        this.xRange = properties.xRange ?? [-10,10]
+        this.yRange = properties.yRange ?? [-10,10]
+        this.setAxis()
+        this.#group = new Group(this.#xAxis, this.#yAxis)
+        this.#plot = new Group()
+    }
+    setAxis(){
+        let factor = 1
+        if(!this.isYFlip){factor = -1}
+        this.#xAxis = new Arrow({
+            start: new Coordinates2(this.x + this.xRange[0]*this.pxPerUnit, this.y),
+            end: new Coordinates2(this.x + this.xRange[1]*this.pxPerUnit, this.y),
+            strokeColor: this.strokeColor
+        })
+        this.#yAxis = new Arrow({
+            start: new Coordinates2(this.x, this.y + factor*this.yRange[0]*this.pxPerUnit),
+            end: new Coordinates2(this.x, this.y + factor*this.yRange[1]*this.pxPerUnit),
+            strokeColor: this.strokeColor
+        })
+    }
+    draw(ctx){
+        this.#group.draw(ctx)
+    }
+}
 export class Line extends Shape{
     #start
     #end

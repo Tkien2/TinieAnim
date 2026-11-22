@@ -56,7 +56,9 @@ export class Render {
         this.paintBackgroundColor()
         for(let e of this.#entities){
             try{
+                this.ctx.save()
                 e.draw(this.ctx)
+                this.ctx.restore()
             } catch(error){
                 console.error("Can not render this entity",e,"==========\n",error)
                 this.#isRendered = false
