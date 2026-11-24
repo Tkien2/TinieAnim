@@ -1,5 +1,11 @@
 import * as constants from "./constants.js"
-import { Coordinates2, Matrix, Vector2, getTangent } from "./math.js"
+import { 
+    Coordinates2, 
+    Matrix, 
+    Vector2, 
+    getTangent, 
+    getNiceStep 
+} from "./math.js"
 /*
 Trong trường hợp bản thân đọc lại code và đếch hiểu gì:
 - Các class thuộc đoạn thẳng, đa giác đều có các điểm được xác định bởi các vector.
@@ -276,14 +282,22 @@ export class Text extends Entity{
 */
 export class Graph extends Shape{
     #group
-    #xAxis
-    #yAxis
+    #xAxis ; #yAxis
     #plot
     #labels
     #func
     #graph
+    #niceStep = {x: 1, y: 1}
+    // pos
+    #xAxisTicks = [] ; #yAxisTicks = []
+    #xTicks = new Group()
+    #yTicks = new Group()
     constructor(properties = {}){
         super(properties)
+        this.showTickMarks = properties.showTickMarks ?? true
+        this.tickSize = properties.tickSize ?? 8
+        this.stepDensity = properties.stepDensity ?? 5
+        this.plotColor = properties.plotColor ?? constants.COLORS.Yellow
         this.isYFlip = properties.isYFlip ?? true
         this.pxPerUnit = properties.pxPerUnit ?? 10
         this.xRange = properties.xRange ?? [-10,10]
@@ -293,6 +307,8 @@ export class Graph extends Shape{
         this.labelColor = properties.labelColor ?? this.color
         this.labelSize = properties.labelSize ?? 20
         this.setAxis()
+        this.setNiceStep(this.stepDensity)
+        this.#addTickMarks()
         this.#group = new Group(this.#xAxis, this.#yAxis)
         this.#plot = []
         this.#graph = new Group()
@@ -341,7 +357,7 @@ export class Graph extends Shape{
     }
     #createPoints(){
         const xStep = Math.abs(this.xRange[1] - this.xRange[0])/300
-        const threshold = 0.5/this.pxPerUnit //unit
+        const threshold = 0.8/this.pxPerUnit //unit
         let tangent = getTangent(this.#func, this.xRange[0])
         let factors = {
             a: tangent.a, b: tangent.b
@@ -370,10 +386,10 @@ export class Graph extends Shape{
             let f = this.#func(x)
             let delta = Math.abs(g-f)
             const isInRange = f >= this.yRange[0] && f <= this.yRange[1]
+            const lastCoords = this.#plot[this.#plot.length - 1]
             if(
                 delta >= threshold && 
-                f <= this.yRange[1] && 
-                f >= this.yRange[0] &&
+                isInRange &&
                 Number.isFinite(f)
             ){
                 addPoint.bind(this)(x, f, isInRange)
@@ -381,17 +397,20 @@ export class Graph extends Shape{
                 x -= 0.5*xStep
             } else if(
                 (
-                    Math.abs(f - this.yRange[0])*this.pxPerUnit <= 3 || 
-                    Math.abs(f - this.yRange[1])*this.pxPerUnit <= 3
+                    Math.abs(f - this.yRange[0])*this.pxPerUnit <= 7 || 
+                    Math.abs(f - this.yRange[1])*this.pxPerUnit <= 7
                 ) &&
-                Number.isFinite(f)
+                Number.isFinite(f) &&
+                this.#plot.length > 0 &&
+                lastCoords.isInRange
             ){
                 addPoint.bind(this)(x, f, isInRange)
                 x -= 0.5*xStep
             }
             if(
                 this.#plot.length > 1 && 
-                !this.#plot[this.#plot.length - 1].isInRange
+                !lastCoords.isInRange &&
+                this.#plot[this.#plot.length - 2].isInRange
             ){
                 addPoint.bind(this)(x,f, false)
             }
@@ -404,8 +423,7 @@ export class Graph extends Shape{
                 newCoords
             )
         }
-        console.log(this.#plot);
-        console.log(this.#plot.length);
+        
     }
     #connectPoints(){
         for(let i = 1; i < this.#plot.length; i++){
@@ -413,11 +431,12 @@ export class Graph extends Shape{
                 this.#graph.addEntities(
                     new Line({
                         start: this.#plot[i-1],
-                        end: this.#plot[i], color: constants.COLORS.Yellow
+                        end: this.#plot[i], color: this.plotColor
                     }),
                     // new Circle({
-                    //     radius: 2, color: constants.COLORS.Yellow,
-                    //     x: this.#plot[i-1].x, y: this.#plot[i-1].y
+                    //     color: constants.COLORS.Red,
+                    //     radius: 3,
+                    //     x: this.#plot[i].x, y: this.#plot[i].y
                     // })
                 )
             }
@@ -449,10 +468,93 @@ export class Graph extends Shape{
             strokeColor: this.color
         })
     }
+    setNiceStep(stepDensity){
+        this.#niceStep.x = getNiceStep(this.xRange[1] - this.xRange[0], stepDensity)
+        this.#niceStep.y = getNiceStep(this.yRange[1] - this.yRange[0], stepDensity)
+        console.log(this.#niceStep);
+    }
+    // Thêm vạch số
+    #addTickMarks(){
+        function addNumber(tickCoords, isX = true){
+            if(isX){
+                this.#xTicks.addEntities(
+                    new Text({
+                        color: this.color,
+                        fontSize: 15,
+                        x: tickCoords.x,
+                        y: tickCoords.y - this.tickSize,
+                        textBaseline: "top",
+                        text: `${((tickCoords.x - this.x)/(this.pxPerUnit))}`
+                    })
+                )
+            } else{
+                this.#xTicks.addEntities(
+                    new Text({
+                        color: this.color,
+                        fontSize: 15,
+                        y: tickCoords.y,
+                        x: tickCoords.x + this.tickSize,
+                        textAlign: "left",
+                        text: `${((tickCoords.y - this.y)/(this.pxPerUnit))}`
+                    })
+                )
+            }
+        }
+        function addTick(tickCoords, isX = true){
+            if(isX){
+                this.#xTicks.addEntities(
+                    new Line({
+                        color: this.color,
+                        start: new Coordinates2(tickCoords.x, this.y - this.tickSize/2),
+                        end: new Coordinates2(tickCoords.x, this.y + this.tickSize/2)
+                    })
+                )
+                addNumber.bind(this)(tickCoords, isX)
+            } else{
+                this.#yTicks.addEntities(
+                    new Line({
+                        color: this.color,
+                        start: new Coordinates2(this.x - this.tickSize/2, tickCoords.y),
+                        end: new Coordinates2(this.x + this.tickSize/2, tickCoords.y)
+                    })
+                )
+                addNumber.bind(this)(tickCoords, isX)
+            }
+        }
+        const vectorX = new Vector2(this.#niceStep.x*this.pxPerUnit, 0)
+        const vectorY = new Vector2(0, this.#niceStep.y*this.pxPerUnit)
+        // Lặp trục x dương
+        for(let i = 0; i < Math.floor(this.xRange[1]/this.#niceStep.x); i++){
+            const tick = this.getCoordinates2().shift(vectorX.multiply(i + 1))
+            addTick.bind(this)(tick)
+        }
+        // x âm
+        for(let i = 0; i < Math.floor(Math.abs(this.xRange[0])/this.#niceStep.x); i++){
+            const tick = this.getCoordinates2().shift(vectorX.multiply( - i - 1))
+            addTick.bind(this)(tick)
+        }
+        // Lặp trục y dương
+        for(let i = 0; i < Math.floor(this.yRange[1]/this.#niceStep.y); i++){
+            const tick = this.getCoordinates2().shift(vectorY.multiply(i + 1))
+            addTick.bind(this)(tick, false)
+        }
+        // y âm
+        for(let i = 0; i < Math.floor(Math.abs(this.yRange[0])/this.#niceStep.y); i++){
+            const tick = this.getCoordinates2().shift(vectorY.multiply( - i - 1))
+            addTick.bind(this)(tick, false)
+        }
+    }
+    #drawTickMarks(ctx){
+        if(this.showTickMarks){
+            this.#xTicks.draw(ctx)
+            this.#yTicks.draw(ctx)
+        }
+    }
     draw(ctx){
         this.#group.draw(ctx)
         this.#labels.draw(ctx)
         this.drawGraph(ctx)
+        this.#drawTickMarks(ctx)
     }
 }
 export class Line extends Shape{

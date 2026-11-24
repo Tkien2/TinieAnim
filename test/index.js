@@ -9,13 +9,14 @@ const rect = new TinieAnim.Rectangle({
     color: TinieAnim.COLORS.Red
 })
 const graph = new TinieAnim.Graph({
-    x: 200, y: 200,
-    xRange: [-7,7], yRange: [-10,10],
-    pxPerUnit: 20, xLabel: "x", yLabel: "y",
-    color: TinieAnim.COLORS.White
+    x: 200, y: 100,
+    xRange: [-10,5], yRange: [-5,15],
+    pxPerUnit: 15, xLabel: "x", yLabel: "y",
+    color: TinieAnim.COLORS.White,
+    plotColor: TinieAnim.COLORS.Yellow
 })
 graph.setFunction((x)=>{
-    return 1/(x + 1)
+    return x**3 + 4*x**2 - 2
 })
 renderer.setBackgroundColor(TinieAnim.COLORS.Void)
 renderer.addEntities(graph)

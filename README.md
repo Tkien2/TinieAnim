@@ -1,7 +1,7 @@
 # TinieAnim
-A JavaScript animation library
+A JavaScript mathematical animation library
 
-![NPM Version](https://img.shields.io/npm/v/tinieanim/alpha?style=for-the-badge&color=blue)
+![NPM Version](https://img.shields.io/npm/v/tinieanim?style=for-the-badge&color=blue)
 
 ![NPM Downloads](https://img.shields.io/npm/d18m/tinieanim?style=flat-square&logo=npm)
 
@@ -14,3 +14,5 @@ This library is currently **unstable**.
 **Not recommended** for production use.
 
 Documentation is not available yet.
+
+# How to use
