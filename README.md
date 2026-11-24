@@ -1,7 +1,7 @@
 # TinieAnim
 A JavaScript animation library
 
-![version](https://img.shields.io/badge/version-0.1.0--alpha.1-blue?style=for-the-badge)
+![NPM Version](https://img.shields.io/npm/v/tinieanim/alpha?style=for-the-badge&color=blue)
 
 ![license](https://img.shields.io/badge/license-MIT-blue)
 ![status](https://img.shields.io/badge/status-WIP-green)
