@@ -11,13 +11,14 @@ const rect = new TinieAnim.Rectangle({
 const graph = new TinieAnim.Graph({
     x: 200, y: 100,
     xRange: [-10,5], yRange: [-5,15],
-    pxPerUnit: 15, xLabel: "x", yLabel: "y",
+    pxPerUnit: [20,10], xLabel: "x", yLabel: "y",
     color: TinieAnim.COLORS.White,
     plotColor: TinieAnim.COLORS.Yellow
 })
 graph.setFunction((x)=>{
     return x**3 + 4*x**2 - 2
 })
+// rect.setCoordinates2(new TinieAnim.Coordinates2(2,3))
 renderer.setBackgroundColor(TinieAnim.COLORS.Void)
 renderer.addEntities(graph)
 renderer.render()

@@ -85,11 +85,11 @@ export class Render {
     }
     #loop(timestamp){
         timestamp = timestamp ?? 0
-        this.#dt = this.#lastTimestamp === null ? 0 : (timestamp - this.#lastTimestamp)/1000
+        this.#dt = this.#lastTimestamp === null ? 1/60 : (timestamp - this.#lastTimestamp)/1000
         this.#dt = Math.min(this.#dt, 1/30)
         this.#lastTimestamp = this.#dt >= 1/60 ? timestamp : this.#lastTimestamp
         if(this.#isPlaying){
-            if(this.#dt >= 1/60){
+            if(this.#dt >= 1/61){
                 for(let func of this.#updateFunctions){
                     if(func.isEnabled){
                         try{

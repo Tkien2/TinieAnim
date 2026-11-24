@@ -300,7 +300,7 @@ export class Graph extends Shape{
         this.stepDensity = properties.stepDensity ?? 5
         this.plotColor = properties.plotColor ?? constants.COLORS.Yellow
         this.isYFlip = properties.isYFlip ?? true
-        this.pxPerUnit = properties.pxPerUnit ?? 10
+        this.pxPerUnit = properties.pxPerUnit ?? [10,10]
         this.xRange = properties.xRange ?? [-10,10]
         this.yRange = properties.yRange ?? [-10,10]
         this.xLabel = properties.xLabel ?? ""
@@ -318,7 +318,7 @@ export class Graph extends Shape{
                 textAlign: "left",
                 textBaseline: "top",
                 text: this.xLabel,
-                x: this.x + this.pxPerUnit*this.xRange[1] + 10,
+                x: this.x + this.pxPerUnit[0]*this.xRange[1] + 10,
                 y: this.y + 5,
                 color: this.color,
                 fontSize: this.labelSize
@@ -328,7 +328,7 @@ export class Graph extends Shape{
                 textAlign: "right",
                 text: this.yLabel,
                 x: this.x,
-                y: this.y + this.pxPerUnit*this.yRange[1] + 10,
+                y: this.y + this.pxPerUnit[1]*this.yRange[1] + 10,
                 color: this.color,
                 fontSize: this.labelSize
             })
@@ -346,19 +346,19 @@ export class Graph extends Shape{
     //graph2canvas nếu quên
     g2c(coords){
         return new Coordinates2(
-            coords.x*this.pxPerUnit + this.x,
-            coords.y*this.pxPerUnit + this.y
+            coords.x*this.pxPerUnit[0] + this.x,
+            coords.y*this.pxPerUnit[1] + this.y
         )
     }
     c2g(coords){
         return new Coordinates2(
-            (coords.x - this.x)/this.pxPerUnit,
-            (coords.y - this.y)/this.pxPerUnit
+            (coords.x - this.x)/this.pxPerUnit[0],
+            (coords.y - this.y)/this.pxPerUnit[1]
         )
     }
     #createPoints(){
         const xStep = Math.abs(this.xRange[1] - this.xRange[0])/300
-        const threshold = 0.8/this.pxPerUnit //unit
+        const threshold = 0.8/this.pxPerUnit[1] //unit
         let tangent = getTangent(this.#func, this.xRange[0])
         let factors = {
             a: tangent.a, b: tangent.b
@@ -398,8 +398,8 @@ export class Graph extends Shape{
                 x -= 0.5*xStep
             } else if(
                 (
-                    Math.abs(f - this.yRange[0])*this.pxPerUnit <= 7 || 
-                    Math.abs(f - this.yRange[1])*this.pxPerUnit <= 7
+                    Math.abs(f - this.yRange[0])*this.pxPerUnit[1] <= 7 || 
+                    Math.abs(f - this.yRange[1])*this.pxPerUnit[1] <= 7
                 ) &&
                 Number.isFinite(f) &&
                 this.#plot.length > 0 &&
@@ -459,20 +459,19 @@ export class Graph extends Shape{
         if(!this.isYFlip){factor = -1}
         
         this.#xAxis = new Arrow({
-            start: new Coordinates2(this.x + this.xRange[0]*this.pxPerUnit, this.y),
-            end: new Coordinates2(this.x + this.xRange[1]*this.pxPerUnit, this.y),
+            start: new Coordinates2(this.x + this.xRange[0]*this.pxPerUnit[0], this.y),
+            end: new Coordinates2(this.x + this.xRange[1]*this.pxPerUnit[0], this.y),
             strokeColor: this.color
         })
         this.#yAxis = new Arrow({
-            start: new Coordinates2(this.x, this.y + factor*this.yRange[0]*this.pxPerUnit),
-            end: new Coordinates2(this.x, this.y + factor*this.yRange[1]*this.pxPerUnit),
+            start: new Coordinates2(this.x, this.y + factor*this.yRange[0]*this.pxPerUnit[1]),
+            end: new Coordinates2(this.x, this.y + factor*this.yRange[1]*this.pxPerUnit[1]),
             strokeColor: this.color
         })
     }
     setNiceStep(stepDensity){
         this.#niceStep.x = getNiceStep(this.xRange[1] - this.xRange[0], stepDensity)
         this.#niceStep.y = getNiceStep(this.yRange[1] - this.yRange[0], stepDensity)
-        console.log(this.#niceStep);
     }
     // Thêm vạch số
     #addTickMarks(){
@@ -486,7 +485,7 @@ export class Graph extends Shape{
                             x: tickCoords.x,
                             y: tickCoords.y - this.tickSize,
                             textBaseline: "top",
-                            text: `${((tickCoords.x - this.x)/(this.pxPerUnit))}`
+                            text: `${((tickCoords.x - this.x)/(this.pxPerUnit[0]))}`
                         })
                     )
                 } else{
@@ -497,7 +496,7 @@ export class Graph extends Shape{
                             y: tickCoords.y,
                             x: tickCoords.x + this.tickSize,
                             textAlign: "left",
-                            text: `${((tickCoords.y - this.y)/(this.pxPerUnit))}`
+                            text: `${((tickCoords.y - this.y)/(this.pxPerUnit[1]))}`
                         })
                     )
                 }
@@ -524,8 +523,8 @@ export class Graph extends Shape{
                 addNumber.bind(this)(tickCoords, isX)
             }
         }
-        const vectorX = new Vector2(this.#niceStep.x*this.pxPerUnit, 0)
-        const vectorY = new Vector2(0, this.#niceStep.y*this.pxPerUnit)
+        const vectorX = new Vector2(this.#niceStep.x*this.pxPerUnit[0], 0)
+        const vectorY = new Vector2(0, this.#niceStep.y*this.pxPerUnit[1])
         // Lặp trục x dương
         for(let i = 0; i < Math.floor(this.xRange[1]/this.#niceStep.x); i++){
             const tick = this.getCoordinates2().shift(vectorX.multiply(i + 1))
