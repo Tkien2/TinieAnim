@@ -389,9 +389,9 @@ export class Graph extends Shape{
             const isInRange = f >= this.yRange[0] && f <= this.yRange[1]
             const lastCoords = this.#plot[this.#plot.length - 1]
             if(
-                delta >= threshold && 
-                isInRange &&
-                Number.isFinite(f)
+                ((delta >= threshold &&
+                Number.isFinite(f))||(this.#plot.length == 0))&& 
+                isInRange
             ){
                 addPoint.bind(this)(x, f, isInRange)
                 // quá cong, tự lùi về bớt để tăng mật độ
@@ -432,7 +432,8 @@ export class Graph extends Shape{
                 this.#graph.addEntities(
                     new Line({
                         start: this.#plot[i-1],
-                        end: this.#plot[i], color: this.plotColor
+                        end: this.#plot[i], color: this.plotColor,
+                        strokeWidth: this.strokeWidth
                     }),
                     // new Circle({
                     //     color: constants.COLORS.Red,
@@ -461,12 +462,14 @@ export class Graph extends Shape{
         this.#xAxis = new Arrow({
             start: new Coordinates2(this.x + this.xRange[0]*this.pxPerUnit[0], this.y),
             end: new Coordinates2(this.x + this.xRange[1]*this.pxPerUnit[0], this.y),
-            strokeColor: this.color
+            strokeColor: this.color,
+            strokeWidth: this.strokeWidth
         })
         this.#yAxis = new Arrow({
             start: new Coordinates2(this.x, this.y + factor*this.yRange[0]*this.pxPerUnit[1]),
             end: new Coordinates2(this.x, this.y + factor*this.yRange[1]*this.pxPerUnit[1]),
-            strokeColor: this.color
+            strokeColor: this.color,
+            strokeWidth: this.strokeWidth
         })
     }
     setNiceStep(stepDensity){
@@ -485,7 +488,8 @@ export class Graph extends Shape{
                             x: tickCoords.x,
                             y: tickCoords.y - this.tickSize,
                             textBaseline: "top",
-                            text: `${((tickCoords.x - this.x)/(this.pxPerUnit[0]))}`
+                            text: `${((tickCoords.x - this.x)/(this.pxPerUnit[0]))}`,
+                            fontSize: this.labelSize
                         })
                     )
                 } else{
@@ -496,7 +500,8 @@ export class Graph extends Shape{
                             y: tickCoords.y,
                             x: tickCoords.x + this.tickSize,
                             textAlign: "left",
-                            text: `${((tickCoords.y - this.y)/(this.pxPerUnit[1]))}`
+                            text: `${((tickCoords.y - this.y)/(this.pxPerUnit[1]))}`,
+                            fontSize: this.labelSize
                         })
                     )
                 }
@@ -508,7 +513,8 @@ export class Graph extends Shape{
                     new Line({
                         color: this.color,
                         start: new Coordinates2(tickCoords.x, this.y - this.tickSize/2),
-                        end: new Coordinates2(tickCoords.x, this.y + this.tickSize/2)
+                        end: new Coordinates2(tickCoords.x, this.y + this.tickSize/2),
+                        strokeWidth: this.strokeWidth
                     })
                 )
                 addNumber.bind(this)(tickCoords, isX)
@@ -517,7 +523,8 @@ export class Graph extends Shape{
                     new Line({
                         color: this.color,
                         start: new Coordinates2(this.x - this.tickSize/2, tickCoords.y),
-                        end: new Coordinates2(this.x + this.tickSize/2, tickCoords.y)
+                        end: new Coordinates2(this.x + this.tickSize/2, tickCoords.y),
+                        strokeWidth: this.strokeWidth
                     })
                 )
                 addNumber.bind(this)(tickCoords, isX)

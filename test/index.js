@@ -13,7 +13,8 @@ const graph = new TinieAnim.Graph({
     xRange: [-10,5], yRange: [-5,15],
     pxPerUnit: [20,10], xLabel: "x", yLabel: "y",
     color: TinieAnim.COLORS.White,
-    plotColor: TinieAnim.COLORS.Yellow
+    plotColor: TinieAnim.COLORS.Yellow,
+    strokeWidth: 3, labelSize: 30,
 })
 graph.setFunction((x)=>{
     return x**3 + 4*x**2 - 2
