@@ -86,20 +86,22 @@ export class Render {
     #loop(timestamp){
         timestamp = timestamp ?? 0
         this.#dt = this.#lastTimestamp === null ? 0 : (timestamp - this.#lastTimestamp)/1000
-        this.#dt = Math.min(this.#dt, 0.01667)
-        this.#lastTimestamp = timestamp
+        this.#dt = Math.min(this.#dt, 1/30)
+        this.#lastTimestamp = this.#dt >= 1/60 ? timestamp : this.#lastTimestamp
         if(this.#isPlaying){
-            for(let func of this.#updateFunctions){
-                if(func.isEnabled){
-                    try{
-                        func(this.#dt)
-                    } catch(e){
-                        console.error("There is something wrong with updateFunction.\n", e)
-                        this.pause()
+            if(this.#dt >= 1/60){
+                for(let func of this.#updateFunctions){
+                    if(func.isEnabled){
+                        try{
+                            func(this.#dt)
+                        } catch(e){
+                            console.error("There is something wrong with updateFunction.\n", e)
+                            this.pause()
+                        }
                     }
                 }
+                this.render()
             }
-            this.render()
             requestAnimationFrame(this.#loop.bind(this))
         }
     }

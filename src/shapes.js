@@ -1,5 +1,5 @@
 import * as constants from "./constants.js"
-import { Coordinates2, Matrix, Vector2 } from "./math.js"
+import { Coordinates2, Matrix, Vector2, getTangent } from "./math.js"
 /*
 Trong trường hợp bản thân đọc lại code và đếch hiểu gì:
 - Các class thuộc đoạn thẳng, đa giác đều có các điểm được xác định bởi các vector.
@@ -193,6 +193,9 @@ export class Group{
         }
         this.updateCoordsArray(this.#entities)
     }
+    clearEntities(){
+        this.#entities = []
+    }
     updateCoordsArray(...entities){
         this.coordsArray = []
         for(const entity of entities[0]){
@@ -231,7 +234,9 @@ export class Group{
     }
     draw(ctx){
         for(const entity of this.#entities){
+            ctx.save()
             entity.draw(ctx)
+            ctx.restore()
         }
     }
 }
@@ -245,6 +250,7 @@ export class Text extends Entity{
         this.textBaseline = properties.textBaseline ?? "middle"
         this.color= properties.color ?? constants.COLORS.Blue
         this.strokeColor = properties.strokeColor
+        this.isYFlip = properties.isYFlip ?? true
     }
     draw(ctx){
         ctx.font = `${this.fontSize}px ${this.fontFamily}`
@@ -252,42 +258,201 @@ export class Text extends Entity{
         ctx.textBaseline = this.textBaseline
         ctx.fillStyle = this.color
         ctx.strokeStyle = this.strokeColor ?? "transparent"
-        ctx.strokeText(this.text, this.x, this.y)
-        ctx.fillText(this.text, this.x, this.y)
+        if(this.isYFlip){
+            ctx.translate(this.x, this.y)
+            ctx.scale(1, -1)
+            ctx.strokeText(this.text, 0, 0)
+            ctx.fillText(this.text, 0, 0)
+        } else{
+            ctx.scale(1, 1)
+            ctx.strokeText(this.text, this.x, this.y)
+            ctx.fillText(this.text, this.x, this.y)
+        }
     }
 }
-// Why?
+// WARNING: Thuật toán không thể phân biệt tiệm cận đứng
+/**
+ * Only works with simple function
+*/
 export class Graph extends Shape{
     #group
     #xAxis
     #yAxis
     #plot
+    #labels
+    #func
+    #graph
     constructor(properties = {}){
         super(properties)
         this.isYFlip = properties.isYFlip ?? true
         this.pxPerUnit = properties.pxPerUnit ?? 10
         this.xRange = properties.xRange ?? [-10,10]
         this.yRange = properties.yRange ?? [-10,10]
+        this.xLabel = properties.xLabel ?? ""
+        this.yLabel = properties.yLabel ?? ""
+        this.labelColor = properties.labelColor ?? this.color
+        this.labelSize = properties.labelSize ?? 20
         this.setAxis()
         this.#group = new Group(this.#xAxis, this.#yAxis)
-        this.#plot = new Group()
+        this.#plot = []
+        this.#graph = new Group()
+        this.#labels = new Group(
+            new Text({
+                textAlign: "left",
+                textBaseline: "top",
+                text: this.xLabel,
+                x: this.x + this.pxPerUnit*this.xRange[1] + 10,
+                y: this.y + 5,
+                color: this.color,
+                fontSize: this.labelSize
+            }),
+            new Text({
+                textBaseline: "bottom",
+                textAlign: "right",
+                text: this.yLabel,
+                x: this.x,
+                y: this.y + this.pxPerUnit*this.yRange[1] + 10,
+                color: this.color,
+                fontSize: this.labelSize
+            })
+        )
+    }
+    setFunction(func){
+        if(typeof func == 'function'){
+            this.clearPlotAndGraph()
+            this.#func = func
+            this.#updatePlot()
+        }else{
+            throw new TypeError('func must be a function')
+        }
+    }
+    //graph2canvas nếu quên
+    g2c(coords){
+        return new Coordinates2(
+            coords.x*this.pxPerUnit + this.x,
+            coords.y*this.pxPerUnit + this.y
+        )
+    }
+    c2g(coords){
+        return new Coordinates2(
+            (coords.x - this.x)/this.pxPerUnit,
+            (coords.y - this.y)/this.pxPerUnit
+        )
+    }
+    #createPoints(){
+        const xStep = Math.abs(this.xRange[1] - this.xRange[0])/300
+        const threshold = 0.5/this.pxPerUnit //unit
+        let tangent = getTangent(this.#func, this.xRange[0])
+        let factors = {
+            a: tangent.a, b: tangent.b
+        }
+        const f1 = this.#func(this.xRange[0])
+        if(f1 <= this.yRange[1] && f1 >= this.yRange[0]){
+            const newCoords = this.g2c(new Coordinates2(this.xRange[0], this.#func(this.xRange[0])))
+            newCoords.isInRange = true
+            this.#plot.push(
+                newCoords
+            )
+        }
+        function addPoint(x, f, isInRange){
+            const newCoords = this.g2c(new Coordinates2(x, f))
+            newCoords.isInRange = isInRange
+            this.#plot.push(
+                newCoords
+            )
+            tangent = getTangent(this.#func, x)
+            factors.a = tangent.a
+            factors.b = tangent.b
+            return newCoords
+        }
+        for(let x = this.xRange[0]; x < this.xRange[1]; x+=xStep){
+            let g = factors.a*x + factors.b
+            let f = this.#func(x)
+            let delta = Math.abs(g-f)
+            const isInRange = f >= this.yRange[0] && f <= this.yRange[1]
+            if(
+                delta >= threshold && 
+                f <= this.yRange[1] && 
+                f >= this.yRange[0] &&
+                Number.isFinite(f)
+            ){
+                addPoint.bind(this)(x, f, isInRange)
+                // quá cong, tự lùi về bớt để tăng mật độ
+                x -= 0.5*xStep
+            } else if(
+                (
+                    Math.abs(f - this.yRange[0])*this.pxPerUnit <= 3 || 
+                    Math.abs(f - this.yRange[1])*this.pxPerUnit <= 3
+                ) &&
+                Number.isFinite(f)
+            ){
+                addPoint.bind(this)(x, f, isInRange)
+                x -= 0.5*xStep
+            }
+            if(
+                this.#plot.length > 1 && 
+                !this.#plot[this.#plot.length - 1].isInRange
+            ){
+                addPoint.bind(this)(x,f, false)
+            }
+        }
+        const f2 = this.#func(this.xRange[1])
+        if(f2 <= this.yRange[1] && f2 >= this.yRange[0]){
+            const newCoords = this.g2c(new Coordinates2(this.xRange[1], this.#func(this.xRange[1])))
+            newCoords.isInRange = true
+            this.#plot.push(
+                newCoords
+            )
+        }
+        console.log(this.#plot);
+        console.log(this.#plot.length);
+    }
+    #connectPoints(){
+        for(let i = 1; i < this.#plot.length; i++){
+            if(this.#plot[i].isInRange && this.#plot[i - 1].isInRange){
+                this.#graph.addEntities(
+                    new Line({
+                        start: this.#plot[i-1],
+                        end: this.#plot[i], color: constants.COLORS.Yellow
+                    }),
+                    // new Circle({
+                    //     radius: 2, color: constants.COLORS.Yellow,
+                    //     x: this.#plot[i-1].x, y: this.#plot[i-1].y
+                    // })
+                )
+            }
+        }
+    }
+    #updatePlot(){
+        this.#createPoints()
+        this.#connectPoints()
+    }
+    drawGraph(ctx){
+        this.#graph.draw(ctx)
+    }
+    clearPlotAndGraph(){
+        this.#plot = []
+        this.#graph.clearEntities()
     }
     setAxis(){
         let factor = 1
         if(!this.isYFlip){factor = -1}
+        
         this.#xAxis = new Arrow({
             start: new Coordinates2(this.x + this.xRange[0]*this.pxPerUnit, this.y),
             end: new Coordinates2(this.x + this.xRange[1]*this.pxPerUnit, this.y),
-            strokeColor: this.strokeColor
+            strokeColor: this.color
         })
         this.#yAxis = new Arrow({
             start: new Coordinates2(this.x, this.y + factor*this.yRange[0]*this.pxPerUnit),
             end: new Coordinates2(this.x, this.y + factor*this.yRange[1]*this.pxPerUnit),
-            strokeColor: this.strokeColor
+            strokeColor: this.color
         })
     }
     draw(ctx){
         this.#group.draw(ctx)
+        this.#labels.draw(ctx)
+        this.drawGraph(ctx)
     }
 }
 export class Line extends Shape{
@@ -354,6 +519,7 @@ export class Arrow extends Line{
     #renderedArrowTipVector
     constructor(properties = {}){
         super(properties)
+        this.strokeColor = properties.strokeColor ?? constants.COLORS.Yellow
         this.arrowTipScale = properties.arrowTipScale ?? 1
         this.setOriginalVectors([
             this.getEndPoint().subtract(this.getStartPoint()),

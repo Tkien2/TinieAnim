@@ -193,7 +193,7 @@ export function BinarySearch(target, func, min=0, max=1, decimalPoint = 6){
     console.warn("Can not find the value you are looking for")
     return undefined
 }
-function getNiceStep(value, n){
+export function getNiceStep(value, n){
     if(value == 0){
         throw new Error("value can not be 0")
     }
@@ -217,4 +217,20 @@ function getNiceStep(value, n){
         }
     }
     return niceStepsArray[closest.index]*step
+}
+export function getDerivative(func, x){
+    const dx = 1e-6
+    const dy = func(x + dx) - func(x)
+    return dy/dx
+}
+/**
+ * y = ax + b
+ * @param {function} func 
+ * @param {number} x
+ * @returns {object} {a, b}
+ */
+export function getTangent(func, x){
+    const a = getDerivative(func, x)
+    const y = func(x)
+    return {a: a, b: -a*x + y}
 }

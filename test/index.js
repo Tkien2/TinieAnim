@@ -9,14 +9,14 @@ const rect = new TinieAnim.Rectangle({
     color: TinieAnim.COLORS.Red
 })
 const graph = new TinieAnim.Graph({
-    x: 100, y: 100,
-    xRange: [-10,100], yRange: [-10,100],
-    pxPerUnit: 2,
+    x: 200, y: 200,
+    xRange: [-7,7], yRange: [-10,10],
+    pxPerUnit: 20, xLabel: "x", yLabel: "y",
+    color: TinieAnim.COLORS.White
 })
-const txt = new TinieAnim.Text({
-    x: 80, y: 200,
-    text: "Hello",
+graph.setFunction((x)=>{
+    return 1/(x + 1)
 })
 renderer.setBackgroundColor(TinieAnim.COLORS.Void)
-renderer.addEntities(graph, txt)
+renderer.addEntities(graph)
 renderer.render()
