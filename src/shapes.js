@@ -294,6 +294,7 @@ export class Graph extends Shape{
     #yTicks = new Group()
     constructor(properties = {}){
         super(properties)
+        this.showNumberMarks = properties.showNumberMarks ?? true
         this.showTickMarks = properties.showTickMarks ?? true
         this.tickSize = properties.tickSize ?? 8
         this.stepDensity = properties.stepDensity ?? 5
@@ -476,28 +477,30 @@ export class Graph extends Shape{
     // Thêm vạch số
     #addTickMarks(){
         function addNumber(tickCoords, isX = true){
-            if(isX){
-                this.#xTicks.addEntities(
-                    new Text({
-                        color: this.color,
-                        fontSize: 15,
-                        x: tickCoords.x,
-                        y: tickCoords.y - this.tickSize,
-                        textBaseline: "top",
-                        text: `${((tickCoords.x - this.x)/(this.pxPerUnit))}`
-                    })
-                )
-            } else{
-                this.#xTicks.addEntities(
-                    new Text({
-                        color: this.color,
-                        fontSize: 15,
-                        y: tickCoords.y,
-                        x: tickCoords.x + this.tickSize,
-                        textAlign: "left",
-                        text: `${((tickCoords.y - this.y)/(this.pxPerUnit))}`
-                    })
-                )
+            if(this.showNumberMarks){
+                if(isX){
+                    this.#xTicks.addEntities(
+                        new Text({
+                            color: this.color,
+                            fontSize: 15,
+                            x: tickCoords.x,
+                            y: tickCoords.y - this.tickSize,
+                            textBaseline: "top",
+                            text: `${((tickCoords.x - this.x)/(this.pxPerUnit))}`
+                        })
+                    )
+                } else{
+                    this.#xTicks.addEntities(
+                        new Text({
+                            color: this.color,
+                            fontSize: 15,
+                            y: tickCoords.y,
+                            x: tickCoords.x + this.tickSize,
+                            textAlign: "left",
+                            text: `${((tickCoords.y - this.y)/(this.pxPerUnit))}`
+                        })
+                    )
+                }
             }
         }
         function addTick(tickCoords, isX = true){
