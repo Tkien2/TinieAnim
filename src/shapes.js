@@ -357,7 +357,12 @@ export class Graph extends Shape{
         )
     }
     #createPoints(){
-        const xStep = Math.abs(this.xRange[1] - this.xRange[0])/300
+        const originalXStep = 1/this.pxPerUnit[0]
+        let xStep = originalXStep
+        function getXStep(derivative){
+            derivative = Math.abs(derivative)
+            return Math.max(originalXStep*(1/(derivative + 1)), originalXStep/10)
+        }
         const threshold = 0.8/this.pxPerUnit[1] //unit
         let tangent = getTangent(this.#func, this.xRange[0])
         let factors = {
@@ -383,6 +388,7 @@ export class Graph extends Shape{
             return newCoords
         }
         for(let x = this.xRange[0]; x < this.xRange[1]; x+=xStep){
+            xStep = getXStep(factors.a)
             let g = factors.a*x + factors.b
             let f = this.#func(x)
             let delta = Math.abs(g-f)
@@ -395,7 +401,7 @@ export class Graph extends Shape{
             ){
                 addPoint.bind(this)(x, f, isInRange)
                 // quá cong, tự lùi về bớt để tăng mật độ
-                x -= 0.5*xStep
+                // x -= 0.5*originalXStep
             } else if(
                 (
                     Math.abs(f - this.yRange[0])*this.pxPerUnit[1] <= 7 || 
@@ -406,7 +412,7 @@ export class Graph extends Shape{
                 lastCoords.isInRange
             ){
                 addPoint.bind(this)(x, f, isInRange)
-                x -= 0.5*xStep
+                // x -= 0.5*originalXStep
             }
             if(
                 this.#plot.length > 1 && 
@@ -424,7 +430,6 @@ export class Graph extends Shape{
                 newCoords
             )
         }
-        
     }
     #connectPoints(){
         for(let i = 1; i < this.#plot.length; i++){
